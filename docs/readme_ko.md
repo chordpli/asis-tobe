@@ -13,10 +13,16 @@
 ## 30초 시작
 
 ```bash
+npx skills add chordpli/asis-tobe -g -a claude-code
+```
+
+직접 clone 해도 돼요.
+
+```bash
 git clone https://github.com/chordpli/asis-tobe.git ~/.claude/skills/asis-tobe
 ```
 
-폴더 이름은 `asis-tobe` 여야 해요. 스킬이 자기 스크립트를 `~/.claude/skills/asis-tobe/scripts/` 에서 찾아요. 갱신은 그 폴더에서 `git pull` 이에요.
+사용자 단위(`-g`)로, `asis-tobe` 라는 폴더에 설치해야 해요. 스킬이 자기 스크립트를 `~/.claude/skills/asis-tobe/scripts/` 에서 찾기 때문에 프로젝트 단위로 설치하면 찾지 못해요. 갱신은 `npx skills update asis-tobe -g` 이고, clone 한 폴더라면 `git pull` 이에요.
 
 설치한 뒤 Claude Code 에서 평소 말로 부탁하면 돼요.
 
@@ -177,3 +183,7 @@ examples/
 - 한 번 돌리는 데 20분 남짓 걸려요. 두 버전을 빌드하고 띄워서 재고, 마지막에 다시 재기 때문이에요.
 - 문서는 길어요. 접힌 상태로도 1280px 너비에서 10,000px 를 넘기도 해요. 첫 화면에서 판단하고 필요한 곳만 펼쳐 읽도록 만들었어요.
 - 리포 밖의 호출처는 볼 수 없어요. 그런 곳은 「확인하지 못함」으로 적어요.
+
+## 라이선스
+
+[MIT](../LICENSE)

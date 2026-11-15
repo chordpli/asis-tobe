@@ -13,10 +13,16 @@ Full example documents: [English](examples/example-todo.en.html), [한국어](ex
 ## Quick start
 
 ```bash
+npx skills add chordpli/asis-tobe -g -a claude-code
+```
+
+Or clone it yourself:
+
+```bash
 git clone https://github.com/chordpli/asis-tobe.git ~/.claude/skills/asis-tobe
 ```
 
-The folder must be named `asis-tobe`. The skill looks for its scripts in `~/.claude/skills/asis-tobe/scripts/`. To update, run `git pull` in that folder.
+Install it at user level (`-g`), in a folder named `asis-tobe`. The skill looks for its scripts in `~/.claude/skills/asis-tobe/scripts/`, so a project-level install does not find them. To update, run `npx skills update asis-tobe -g`, or `git pull` in a cloned folder.
 
 Then ask Claude Code in plain words.
 
@@ -177,3 +183,7 @@ examples/
 - One run takes a little over 20 minutes. It builds both versions, runs them, measures, and measures again at the end.
 - The document is long. Folded, it can pass 10,000px at 1280px width. It is built so that you decide on the first screen and open only what you need.
 - Consumers outside the repo cannot be seen. They are written as “Not verified”.
+
+## License
+
+[MIT](LICENSE)

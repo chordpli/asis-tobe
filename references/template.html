@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="{{ko|en}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{issue key, omit if none}} AS-IS와 TO-BE: {{title}}</title>
+<style>
+  /* Design: step rail and stage (round 3 draft D1). On a neutral gray background, use only two treatments: AS-IS (dashed with hatching) and TO-BE (solid with fill).
+     Never distinguish by color alone. Line style and symbols (+, −, ~) always go with it */
+  :root {
+    --bg: #f6f1e7; --surface: #fffcf6; --raised: #f2ebde; --sunken: #eae0cf; --fg: #213448; --muted: #3f6079; --line: #e2d7c3; --line-2: #6f95a6;
+    --a-edge: #a8987c; --a-ink: #5c5040; --a-bg: #f5efe3; --a-strong: #eae0cf; --a-mark: #efe6d6;
+    --b-edge: #547792; --b-ink: #213448; --b-bg: #e3edf1; --b-strong: #94b4c1; --b-mark: #d3e3ea; --on-b: #ffffff;
+    --code: #ece4d5; --codeblock: #fbf8f2; --device: #213448; --device-edge: #547792;
+    --shadow: 0 1px 2px rgba(33, 52, 72, .06), 0 6px 20px rgba(33, 52, 72, .07);
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  /* There are two color schemes: the default Dusk (beige, slate blue) and Bloom via data-theme (pink, mint). Switch with the toggle in the header.
+     Do not follow the system dark-mode setting. In-line code highlights (mark) use the light --*-mark, not the dark chip colors (--*-strong) */
+  :root[data-theme="bloom"] {
+    --bg: #fff8f8; --surface: #ffffff; --raised: #fef8f8; --sunken: #fbf0f0; --fg: #2f2a2b; --muted: #6f6466; --line: #f1dcdc; --line-2: #b7868d;
+    --a-edge: #d77f92; --a-ink: #9c3f55; --a-bg: #fdf0f2; --a-strong: #f2c7c7; --a-mark: #f7dada;
+    --b-edge: #2f7a45; --b-ink: #2c6a3d; --b-bg: #ebf8ed; --b-strong: #d5f3d8; --b-mark: #d5f3d8; --on-b: #ffffff;
+    --code: #f8eced; --codeblock: #fffafa; --device: #2a2526; --device-edge: #8a7c7e;
+    --shadow: 0 1px 2px rgba(120, 60, 70, .05), 0 6px 20px rgba(120, 60, 70, .06);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+  /* Line breaking: Korean breaks at word (eojeol) boundaries. Body text avoids leaving one or two characters on the last line; headings balance line lengths.
+     Code and paths have no eojeol, so let them break anywhere */
+  body { margin: 0; background: var(--bg); color: var(--fg); word-break: keep-all; overflow-wrap: break-word;
+    font: 15px/1.62 "Pretendard Variable", Pretendard, "SUIT Variable", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif; }
+  p, li, td, dd { text-wrap: pretty; }
+  h1, h2, h3, .verdict { text-wrap: balance; }
+  code { font: .86em var(--mono); background: var(--code); padding: 1px 5px; border-radius: 4px; word-break: normal; overflow-wrap: anywhere; }
+  a { color: inherit; }
+  img { max-width: 100%; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  :focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+
+  main { max-width: 1240px; margin: 0 auto; padding: 30px 24px 96px; }
+  h1 { font-size: 27px; line-height: 1.3; margin: 0 0 8px; letter-spacing: -.02em; }
+  h2 { font-size: 19px; margin: 56px 0 6px; letter-spacing: -.015em; scroll-margin-top: 56px; }
+  h3 { font-size: 17.5px; margin: 0; line-height: 1.4; letter-spacing: -.01em; }
+  /* An h3 that stands on its own between sections (not a card title) keeps clear of the card above it and its shadow */
+  main > h3 { margin: 44px 0 10px; scroll-margin-top: 56px; }
+  /* Section lead: one line directly under the h2. Skimming the TOC and leads alone reads the document */
+  .lead { margin: 0 0 14px; color: var(--muted); max-width: 800px; }
+  main > p, main > ul, main > ol { max-width: 880px; }
+  .meta { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 9px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface); color: var(--fg); white-space: nowrap; }
+  .arr { display: inline-block; width: 18px; height: 8px; margin: 0 4px; vertical-align: middle; background: currentColor; opacity: .7;
+    clip-path: polygon(0 37%, 68% 37%, 68% 0, 100% 50%, 68% 100%, 68% 63%, 0 63%); }
+  .src { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); }
+  .note { margin: 10px 0 0; padding: 8px 11px; border-radius: 8px; border: 1px dashed var(--line-2); background: var(--surface); font-size: 13.5px; color: var(--muted); max-width: 880px; }
+
+  /* Layer pills: changed layers are on (the script links them to the section with the same name); unchanged layers are off */
+  .layers { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
+  .layers li { font-size: 12px; padding: 1px 10px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface); }
+  .layers li.on { border-color: var(--fg); font-weight: 600; }
+  .layers li.off { color: var(--muted); text-decoration: line-through; background: none; border-style: dashed; }
+  .layers a { text-decoration: none; }
+
+  /* TOC: the script makes a link for each h2, pins it at the top of the screen, and highlights the section being read */
+  nav.toc { position: sticky; top: 0; z-index: 6; display: flex; gap: 4px; overflow-x: auto; padding: 8px 2px; margin: 20px -2px 0;
+    background: var(--bg); border-bottom: 1px solid var(--line); scrollbar-width: none; }
+  nav.toc a { flex: none; font-size: 12.5px; padding: 3px 10px; border-radius: 999px; color: var(--muted); text-decoration: none; }
+  nav.toc a.on { color: var(--fg); background: var(--surface); box-shadow: 0 0 0 1px var(--line-2); font-weight: 600; }
+
+  /* Lane markers: AS-IS is dashed with hatching, TO-BE is solid with fill */
+  .lt { display: inline-block; font: 700 10.5px/1.75 var(--mono); letter-spacing: .07em; padding: 0 7px; border-radius: 4px; white-space: nowrap; vertical-align: 1px; font-style: normal; }
+  .lt.a { color: var(--a-ink); border: 1.5px dashed var(--a-edge); background: var(--a-bg); line-height: 1.55; }
+  .lt.b { color: var(--on-b); background: var(--b-edge); }
+  .hatch { background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--a-edge) 22%, transparent) 0 2px, transparent 2px 7px); }
+
+  /* Change-kind markers: added is a filled square (+), removed is a dashed square (−), changed is a solid square (~) */
+  .kd { display: inline-block; flex: none; width: 17px; height: 17px; border-radius: 4px; font: 700 12px/15px var(--mono); text-align: center; font-style: normal; }
+  .kd.add { background: var(--b-edge); color: var(--on-b); border: 1px solid var(--b-edge); }
+  .kd.del { color: var(--a-ink); border: 1.5px dashed var(--a-edge); line-height: 13px; }
+  .kd.mod { color: var(--fg); border: 1.5px solid var(--line-2); line-height: 13px; }
+
+  /* Breaking badge (the Breaking change? column of the Stripe changelog). Only one, the worst case */
+  .brk { display: inline-block; font: 700 11.5px/1.7 var(--mono); letter-spacing: .03em; padding: 0 9px; border-radius: 5px; margin-bottom: 10px; }
+  .brk.yes { color: var(--a-ink); background: var(--a-bg); border: 1.5px dashed var(--a-edge); } .brk.yes::before { content: "! "; }
+  .brk.ord { color: var(--fg); background: var(--raised); border: 1.5px solid var(--fg); } .brk.ord::before { content: "↧ "; }
+  /* upd: nothing to order; the old consumer is broken only until it is refreshed (a tab reloaded, a client restarted) */
+  .brk.upd { color: var(--fg); background: var(--surface); border: 1.5px solid var(--line-2); } .brk.upd::before { content: "↻ "; }
+  .brk.no { color: var(--on-b); background: var(--b-edge); border: 1.5px solid var(--b-edge); }
+
+  /* Summary: left holds the conclusion, warning, merge order, and what to check. Right holds the change list */
+  .sum { margin-top: 20px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; box-shadow: var(--shadow); min-width: 0; }
+  .card h4 { font-size: 12px; color: var(--muted); margin: 16px 0 5px; letter-spacing: .04em; font-weight: 600; }
+  .card h4:first-child { margin-top: 0; }
+  .card p { margin: 0; }
+  /* Restore the top margin so .card p does not remove it from .note. A memo right after a table (.tw) does not stick to the table border */
+  .card .note, .card .tw + p { margin-top: 10px; }
+  .card ul, .card ol { margin: 0; padding-left: 20px; font-size: 14px; }
+  .verdict { font-size: 18.5px; line-height: 1.45; font-weight: 700; letter-spacing: -.01em; }
+  .warn { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; margin-top: 12px; padding: 10px 12px; border: 1.5px solid var(--fg); border-radius: 10px; background: var(--raised); font-size: 14px; }
+  .warn b { font: 700 11px/1.7 var(--mono); letter-spacing: .04em; padding: 0 7px; border-radius: 4px; background: var(--fg); color: var(--surface); align-self: start; white-space: nowrap; }
+
+  /* Change list (oasdiff, Bump.sh): one change per line. Clicking it expands that scenario step */
+  .clog { list-style: none; margin: 0; padding: 0 !important; font-size: 14px; }
+  .clog li { border-top: 1px solid var(--line); }
+  .clog li:first-child { border-top: 0; }
+  .clog a { display: grid; grid-template-columns: 17px 64px minmax(0, 1fr); gap: 10px; align-items: center; padding: 7px 4px; text-decoration: none; border-radius: 6px; }
+  .clog a:hover { background: var(--raised); }
+  .clog .kd { align-self: center; }
+  .clog .at { font: 600 12px var(--mono); color: var(--muted); white-space: nowrap; }
+  .clog small { display: block; color: var(--muted); font-size: 12.5px; }
+  .legend { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  @media (max-width: 900px) { .sum { grid-template-columns: 1fr; } }
+
+  /* Impact path: layer tags connect vertically. .cross is a link that crosses a repo or network boundary to the next node (dashed),
+     .focal is the breaking link or the result the user sees (1~2) */
+  .chain { list-style: none; margin: 0; padding: 0 !important; display: grid; font-size: 14px; max-width: 880px; }
+  .chain li { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; padding: 5px 0 11px; }
+  .chain li > b { font: 700 11px/1.9 var(--mono); text-align: center; border: 1px solid var(--line-2); border-radius: 5px; background: var(--raised); align-self: start; position: relative; z-index: 1; }
+  .chain li:not(:last-child)::before { content: ""; position: absolute; left: 31px; top: 26px; bottom: -6px; border-left: 1.5px solid var(--line-2); }
+  .chain li.cross:not(:last-child)::before { border-left-style: dashed; }
+  .chain li.focal > b { background: var(--fg); color: var(--surface); border-color: var(--fg); }
+  .chain .claim { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+  .chain .where { font-size: 12.5px; color: var(--muted); }
+  .chain .ev { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+  .chain .ev code { background: none; padding: 0; }
+
+  /* Scenario picker: a 6-cell mini rail per card. The split cells are the changed cells */
+  .picks { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .pick { display: block; text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 13px 15px 12px; box-shadow: var(--shadow); transition: border-color .16s; }
+  .pick:hover { border-color: var(--fg); }
+  .pick small { display: flex; justify-content: space-between; gap: 8px; font: 700 11.5px var(--mono); letter-spacing: .05em; color: var(--muted); }
+  .pick strong { display: block; font-size: 14.5px; line-height: 1.4; margin: 3px 0 11px; }
+  .mini { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+  .mini i { height: 14px; border-radius: 3px; border: 1px solid var(--line-2); background: var(--sunken); }
+  .mini i.d { border: 0; background:
+    linear-gradient(var(--surface), var(--surface)) center / 100% 2px no-repeat,
+    repeating-linear-gradient(135deg, var(--a-edge) 0 2px, color-mix(in srgb, var(--a-edge) 30%, var(--surface)) 2px 5px) top / 100% 50% no-repeat,
+    linear-gradient(var(--b-edge), var(--b-edge)) bottom / 100% 50% no-repeat; }
+
+  /* One scenario */
+  .scn { margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px 22px; box-shadow: var(--shadow); scroll-margin-top: 56px; }
+  .scn-head { display: flex; flex-wrap: wrap; gap: 2px 12px; align-items: baseline; margin-bottom: 16px; }
+  .scn-no { font: 700 11.5px var(--mono); letter-spacing: .06em; color: var(--muted); width: 100%; }
+  .tally { font: 600 12.5px var(--mono); color: var(--muted); white-space: nowrap; margin-left: auto; }
+  /* Scenario head block: evidence row (change request) and cutover row (cutover). Outside the rail; not counted as changed cells */
+  .scn-meta { display: grid; gap: 8px; margin: 0 0 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--raised); font-size: 13.5px; scroll-margin-top: 56px; }
+  .scn-meta .ml { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 4px 10px; align-items: baseline; }
+  .scn-meta .ml > b { font: 700 11px/1.7 var(--mono); letter-spacing: .03em; color: var(--muted); justify-self: start; padding: 0 6px; border-radius: 4px; white-space: nowrap; }
+  .scn-meta .ml > div { min-width: 0; }
+  .scn-meta .ml p { margin: 0; }
+  .scn-meta .cutover.warned > b { color: var(--surface); background: var(--fg); }
+  .scn-meta .new { font-weight: 600; }
+  .scn-meta .prs { margin-top: 0; }
+  .scn-meta .tl, .scn-meta .gates { margin-top: 8px; }
+
+  /* Step rail: two thin lanes. An unchanged cell is one spanning chip (.m); a changed cell is two chips (.a, .b). Skeleton name under the cell name (.sk) */
+  .railwrap { --hh: 34px; --lh: 26px; display: grid; grid-template-columns: 46px minmax(0, 1fr); column-gap: 10px; }
+  .lanes { display: grid; grid-template-rows: var(--hh) var(--lh) var(--lh); row-gap: 5px; align-items: center; font: 700 10.5px var(--mono); letter-spacing: .07em; }
+  .lanes .a { grid-row: 2; color: var(--a-ink); } .lanes .b { grid-row: 3; color: var(--b-ink); }
+  .rail { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: 12px; }
+  .rail::before, .rail::after { content: ""; position: absolute; left: 4px; right: 4px; height: 0; border-top: 2px solid; opacity: .5; }
+  .rail::before { top: calc(var(--hh) + 5px + var(--lh) / 2 - 1px); border-top-style: dashed; border-color: var(--a-edge); }
+  .rail::after { top: calc(var(--hh) + 10px + var(--lh) * 1.5 - 1px); border-color: var(--b-edge); }
+  .step { position: relative; z-index: 1; display: grid; grid-template-rows: var(--hh) var(--lh) var(--lh); row-gap: 5px; text-decoration: none; color: var(--muted); border-radius: 8px; min-width: 0; cursor: pointer; }
+  .sh { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; min-width: 0; white-space: nowrap; }
+  .sh b { flex: none; width: 19px; height: 19px; border-radius: 50%; border: 1.5px solid currentColor; font: 700 10.5px/16px var(--mono); text-align: center; }
+  .sh .nm { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+  .sh .sk { font-size: 10.5px; font-weight: 400; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+  .sh .kd { margin-left: auto; width: 15px; height: 15px; font-size: 11px; line-height: 13px; }
+  .sh .kd.del, .sh .kd.mod { line-height: 11px; }
+  .step.diff { color: var(--fg); }
+  .step.diff .sh { font-weight: 700; }
+  .step.diff .sh b { background: var(--fg); color: var(--surface); border-color: var(--fg); }
+  .pill { display: flex; align-items: center; justify-content: center; border-radius: 6px; font: 600 11px var(--mono); min-width: 0; padding: 0 6px; }
+  .pill em { font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pill.m { grid-row: 2 / 4; background: var(--raised); border: 1px solid var(--line-2); color: var(--muted); }
+  .pill.a { grid-row: 2; color: var(--a-ink); background-color: var(--a-bg); border: 1.5px dashed var(--a-edge); }
+  .pill.b { grid-row: 3; color: var(--on-b); background: var(--b-edge); border: 1.5px solid var(--b-edge); }
+  .step:hover { box-shadow: 0 0 0 5px var(--sunken); background: var(--sunken); }
+  .js .step.on { box-shadow: 0 0 0 5px var(--surface), 0 0 0 7px var(--fg); background: var(--surface); color: var(--fg); }
+  .js .scn:not(.all) .step.on::after { content: ""; position: absolute; left: 50%; bottom: -19px; width: 2px; height: 12px; margin-left: -1px; background: var(--fg); }
+  .rail-foot { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; justify-content: space-between; margin-top: 16px; font-size: 12.5px; color: var(--muted); }
+  .btn { font: 600 12.5px/1 inherit; font-family: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px; padding: 7px 13px; cursor: pointer; white-space: nowrap; }
+  .btn:hover { border-color: var(--fg); }
+  .btn[aria-pressed="true"] { background: var(--fg); border-color: var(--fg); color: var(--surface); }
+  html:not(.js) .nojs-hide { display: none; }
+
+  /* Cell detail: with JavaScript, only one expands at a time. Without JavaScript, or when printed, all six show */
+  .panels { margin-top: 12px; display: grid; gap: 10px; }
+  .panel { background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 16px; min-width: 0; scroll-margin-top: 56px; }
+  .js .scn:not(.all) .panel:not(.on) { display: none; }
+  .js .scn:not(.all) .panel.on { border: 2px solid var(--fg); padding: 13px 15px 15px; animation: rise .2s ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translateY(4px); } }
+  .p-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 9px; margin: 0 0 11px; font-size: 14.5px; }
+  .p-head > b { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--fg); color: var(--surface); font: 700 12px/22px var(--mono); text-align: center; }
+  .p-head small { font-weight: 400; color: var(--muted); font-size: 12.5px; }
+  .p-head .sk { font: 600 11px var(--mono); letter-spacing: .03em; color: var(--muted); }
+  .p-head .st { margin-left: auto; font: 700 11px var(--mono); letter-spacing: .04em; padding: 1px 9px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); white-space: nowrap; }
+  .p-head .st.d { border-color: var(--fg); color: var(--surface); background: var(--fg); }
+  .p-nav { display: none; gap: 6px; margin-top: 12px; justify-content: flex-end; }
+  .js .scn:not(.all) .p-nav { display: flex; }
+  .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
+  .side { position: relative; border-radius: 10px; padding: 10px 13px 12px; min-width: 0; font-size: 14.5px; background: var(--surface); border: 1px solid var(--line); }
+  .side p { margin: 6px 0 0; }
+  .side ul { margin: 6px 0 0; padding-left: 18px; }
+  .side.a { background-color: var(--a-bg); border: 1.5px dashed var(--a-edge); }
+  .side.b { background: var(--b-bg); border: 1.5px solid var(--b-edge); }
+  .split > .side.b::before { content: ""; position: absolute; left: -24px; top: 50%; width: 19px; height: 10px; margin-top: -5px; background: var(--muted);
+    clip-path: polygon(0 38%, 64% 38%, 64% 0, 100% 50%, 64% 100%, 64% 62%, 0 62%); }
+  /* New feature (신설): only the TO-BE side exists, so one full-width column and no arrow */
+  .split.solo { grid-template-columns: minmax(0, 1fr); }
+  .split.solo > .side.b::before { display: none; }
+  /* Entity diagram of the Data layer: inline SVG printed by scripts/erd.py. The SVG carries classes only; colours follow the scheme.
+     A diagram wider than its side scrolls inside .erd-wrap, never the page */
+  .erd-pair { margin-top: 12px; align-items: start; }
+  /* One side only: the box is as wide as its diagram, not the page */
+  .erd-pair.solo { grid-template-columns: fit-content(100%); }
+  .erd-wrap { overflow-x: auto; margin-top: 8px; }
+  /* erd.py prints each side twice: .erd-w (grid) and .erd-n (one column) for narrow screens */
+  .erd-n { display: none; }
+  @media (max-width: 760px) { .erd-w { display: none; } .erd-n { display: block; } }
+  @media print { .erd-w { display: block; } .erd-n { display: none; } }
+  /* erd.py adds .wide when a diagram does not fit half the page: the pair stacks and the arrow points down */
+  .erd-pair.wide { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .erd-pair.wide > .side.b::before { left: 50%; top: -17px; margin: 0 0 0 -5px; width: 10px; height: 13px; clip-path: polygon(38% 0, 62% 0, 62% 62%, 100% 62%, 50% 100%, 0 62%, 38% 62%); }
+  /* On a narrow screen the diagram shrinks to fit, down to the min-width erd.py sets on it (three quarters of its size); below that it scrolls inside .erd-wrap */
+  svg.erd { display: block; font: 12px var(--mono); max-width: 100%; height: auto; }
+  .erd .bg { fill: var(--surface); }
+  .erd .box { fill: none; stroke: var(--line-2); stroke-width: 1; }
+  .erd .hd { fill: var(--raised); }
+  .erd .nm { font: 600 13px system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; fill: var(--fg); }
+  .erd .st { font-weight: 700; font-size: 11px; fill: var(--muted); }
+  .erd .ent.add .box { stroke: var(--b-edge); stroke-width: 2; }
+  .erd .ent.add .hd { fill: var(--b-strong); }
+  .erd .ent.add .st { fill: var(--b-ink); }
+  .erd .ent.del .box { stroke: var(--a-edge); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .erd .ent.del .hd { fill: var(--a-strong); }
+  .erd .ent.del .st { fill: var(--a-ink); }
+  .erd .row.add { fill: var(--b-mark); }
+  .erd .row.del { fill: var(--a-mark); }
+  .erd .row.mod { fill: var(--raised); }
+  .erd .sym { font-weight: 700; fill: var(--fg); }
+  .erd .sym.add { fill: var(--b-ink); }
+  .erd .sym.del { fill: var(--a-ink); }
+  .erd .key { font-size: 9.5px; font-weight: 700; fill: var(--muted); }
+  .erd .fn { fill: var(--fg); }
+  .erd .fn.gone { fill: var(--a-ink); text-decoration: line-through; }
+  .erd .ty { fill: var(--muted); }
+  .erd .rel { fill: none; stroke: var(--muted); stroke-width: 1.3; }
+  .erd .rel.add { stroke: var(--b-edge); stroke-width: 1.8; }
+  .erd .rel.del { stroke: var(--a-edge); stroke-dasharray: 5 4; }
+  .erd-key { margin: 8px 0 0; font-size: 12.5px; color: var(--muted); }
+  /* Long payload lines wrap instead of pushing the page sideways at 420px. Diff tables (.dl) keep their own white-space */
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  /* Code blocks in a side (full payload, model code): the side already has a background, so the code carries none.
+     Only changed lines are marked: removed lines struck through on AS-IS, added lines bold on TO-BE, as in the line diff */
+  pre { margin: 8px 0 0; font: 12.5px/1.75 var(--mono); }
+  pre code { font: inherit; background: none; padding: 0; border-radius: 0; }
+  pre mark { color: inherit; background: var(--raised); border-radius: 3px; padding: 1px 4px; margin: 0 -4px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .side.a pre mark { background: var(--a-mark); color: var(--a-ink); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .side.b pre mark { background: var(--b-mark); font-weight: 700; }
+  .side.same { border-style: dashed; border-color: var(--line-2); color: var(--muted); }
+  .side.same b { color: var(--fg); }
+  .rich { margin-top: 12px; }
+  .rich > h5 { margin: 0 0 6px; font-size: 12px; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+
+  /* Code diff (GitHub Files changed): line-level additions and removals, unified and split views, memos attached to lines */
+  .dv { border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; background: var(--codeblock); }
+  .dv + .dv { margin-top: 12px; }
+  .dv-head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 7px 10px; border-bottom: 1px solid var(--line); background: var(--surface); font: 600 12px/1.5 var(--mono); }
+  .dv-head .path { min-width: 0; overflow-wrap: anywhere; word-break: normal; flex: 1 1 200px; }
+  .dv-head .verb { padding: 0 6px; border: 1px solid var(--line-2); border-radius: 4px; }
+  .stat { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .stat .p { color: var(--b-ink); } .stat .m { color: var(--a-ink); }
+  .stat i { display: inline-block; width: 8px; height: 8px; margin-left: 1px; border: 1px solid var(--line-2); }
+  .stat i.p { background: var(--b-edge); border-color: var(--b-edge); }
+  .stat i.m { border: 1.5px dashed var(--a-edge); }
+  .seg { display: inline-flex; background: var(--sunken); border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
+  .seg button { font: 600 12px/1 inherit; font-family: inherit; color: var(--muted); background: none; border: 0; border-radius: 999px; padding: 5px 11px; cursor: pointer; white-space: nowrap; }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 0 0 1px var(--line-2); }
+  .dv-body { overflow-x: auto; }
+  table.dl { border-collapse: collapse; min-width: 100%; font: 12.5px/1.75 var(--mono); }
+  .dl td { padding: 0; vertical-align: top; white-space: pre; }
+  .dl td.ln { width: 30px; min-width: 30px; text-align: right; padding: 0 6px; color: var(--muted); user-select: none; -webkit-user-select: none; font-size: 11px; line-height: 2; }
+  .dl td.sg { width: 22px; min-width: 22px; text-align: center; font-weight: 700; border-left: 3px solid transparent; user-select: none; -webkit-user-select: none; }
+  .dl td.cd { padding-right: 14px; width: 100%; }
+  .dl tr.add td { background: var(--b-bg); }
+  .dl tr.add td.sg { border-left: 3px solid var(--b-edge); color: var(--b-ink); }
+  .dl tr.del td { background: var(--a-bg); }
+  .dl tr.del td.sg { border-left: 3px dashed var(--a-edge); color: var(--a-ink); }
+  .dl mark { color: inherit; border-radius: 3px; padding: 1px 0; }
+  .dl tr.add mark { background: var(--b-mark); font-weight: 700; }
+  .dl tr.del mark { background: var(--a-mark); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .dl tr.fold td { background: var(--sunken); color: var(--muted); font-size: 12px; padding: 2px 10px; white-space: normal; }
+  .dl tr.cm td { white-space: normal; padding: 0; }
+  .cm-in { width: 0; min-width: 100%; }
+  .cm-box { position: sticky; left: 0; margin: 5px 10px 8px 62px; padding: 7px 10px; border: 1px solid var(--line-2); border-left: 3px solid var(--fg); border-radius: 6px; background: var(--surface);
+    font: 13px/1.55 "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+  .cm-box b { font: 700 11px/1.7 var(--mono); padding: 0 6px; border-radius: 4px; background: var(--fg); color: var(--surface); margin-right: 6px; }
+  .dl.sp td.cd { width: 50%; }
+  .dl.sp td.gap { background-image: repeating-linear-gradient(135deg, var(--line) 0 1px, transparent 1px 6px); }
+  .dl.sp td.mid { border-left: 1px solid var(--line-2); }
+  .dl.sp td.del { background-color: var(--a-bg); } .dl.sp td.add { background-color: var(--b-bg); }
+  .dl.sp td.sg.del { border-left: 3px dashed var(--a-edge); color: var(--a-ink); }
+  .dl.sp td.sg.add { border-left: 3px solid var(--b-edge); color: var(--b-ink); }
+  .dl.sp td.del mark { background: var(--a-mark); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .dl.sp td.add mark { background: var(--b-mark); font-weight: 700; }
+  .dv .v-split { display: none; }
+  .dv[data-view="split"] .v-split { display: table; } .dv[data-view="split"] .v-uni { display: none; }
+  .dv-notes { margin: 0; padding: 4px 12px 10px 28px; border-top: 1px solid var(--line); font-size: 13px; display: none; }
+  .dv[data-view="split"] .dv-notes { display: block; }
+  .dv-notes li { margin-top: 5px; }
+
+  /* Tables: the script wraps them in .tw. On narrow screens only the table scrolls horizontally, not the page */
+  .tw { overflow-x: auto; border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface); margin: 8px 0; }
+  .tw > table { margin: 0; }
+  table.ft { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  .ft th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .03em; padding: 7px 12px; background: var(--raised); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .ft td { padding: 8px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+  .ft tr:first-child td { border-top: 0; }
+  .ft tr.add td { background: var(--b-bg); }
+  .ft tr.add td:first-child { box-shadow: inset 3px 0 0 var(--b-edge); }
+  .ft tr.del td { background: var(--a-bg); }
+  .ft tr.del td:first-child { box-shadow: inset 3px 0 0 var(--a-edge); }
+  .ft .chg { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-weight: 600; }
+  .ft .eq { color: var(--muted); }
+  .ft td:first-child { min-width: 9em; }
+  /* Layer tables whose columns 2 and 3 are AS-IS and TO-BE. A merged 「같다」 ("same") cell spanning both has its color removed */
+  table.ft.cmp td:nth-child(2) { background-color: var(--a-bg); min-width: 10em; }
+  table.ft.cmp td:nth-child(3) { background-color: var(--b-bg); min-width: 12em; }
+  table.ft.cmp td[colspan] { background: none; color: var(--muted); }
+  table.ft.cmp td[colspan] ~ td { background: none; }
+  /* Identifiers on a tinted surface take that side's own shade, not the page's beige code chip */
+  .ft tr.add code, table.ft.cmp td:nth-child(3):not([colspan]) code, .side.b code, .logrow .lb code { background: var(--b-mark); }
+  .ft tr.del code, table.ft.cmp td:nth-child(2):not([colspan]) code, .side.a code, .logrow .la code { background: var(--a-mark); }
+  table.ft.cmp td[colspan] code, table.ft.cmp td[colspan] ~ td code { background: var(--code); }
+  .side pre code { background: none; }
+  .old { color: var(--a-ink); text-decoration: line-through; } .new { color: var(--b-ink); font-weight: 700; }
+  .yn { font-weight: 700; white-space: nowrap; } .yn.yes { color: var(--a-ink); } .yn.no { color: var(--muted); }
+  .two { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+  .card .tw { margin: 4px 0 0; }
+  .card .ft { font-size: 13px; }
+  .card .ft td, .card .ft th { padding: 6px 9px; }
+  /* The first cell (order number) of tables inside cards is narrow. Release the layer table's 9em minimum so other cells do not wrap */
+  .card .ft td:first-child { min-width: 0; white-space: nowrap; }
+
+  /* Log: one event per row. Left: branch (server log, app error, analytics event) and name; middle: AS-IS; right: TO-BE */
+  .logs { display: grid; gap: 8px; }
+  .logrow { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr); border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; background: var(--surface); font-size: 13.5px; }
+  .logrow > div { padding: 9px 12px; min-width: 0; }
+  .logrow .ev { background: var(--codeblock); border-right: 1px solid var(--line); }
+  .logrow .ch { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+  .logrow .ev code { background: none; padding: 0; font-size: 12.5px; font-weight: 600; }
+  .logrow .la { background-color: var(--a-bg); border-right: 1px dashed var(--a-edge); }
+  .logrow .lb { background: var(--b-bg); }
+  .emit { display: flex; align-items: center; gap: 7px; font-weight: 700; margin: 4px 0 2px; }
+  .dot { flex: none; width: 11px; height: 11px; border-radius: 50%; background: currentColor; }
+  .dot.off { background: none; border: 1.5px dashed currentColor; }
+
+  /* Result: bars only when there are comparable numbers (cost, count, time). Width is a ratio with the larger side as 100% */
+  .cost { display: grid; gap: 8px; }
+  .cbar { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 10px; align-items: center; }
+  .cbar .track { height: 30px; border-radius: 6px; background: var(--sunken); position: relative; }
+  .cbar .fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding: 0 9px; font: 700 12.5px var(--mono); white-space: nowrap; }
+  .cbar .fill.a { color: var(--a-ink); background-color: var(--a-bg); border: 1.5px dashed var(--a-edge); }
+  .cbar .fill.b { color: var(--on-b); background: var(--b-edge); }
+
+  /* Cutover row: merge order over repo lanes. A bold vertical line is an order that must be kept; a thin one is an order that may be broken */
+  .tl { display: grid; grid-template-columns: 96px repeat(var(--cols, 4), minmax(0, 1fr)); border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface); overflow: hidden; }
+  .tl > * { min-width: 0; padding: 8px 6px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: center; position: relative; }
+  .tl .hd { border-top: 0; background: var(--raised); flex-direction: column; font: 600 11.5px/1.4 var(--mono); color: var(--muted); }
+  .tl .hd b { color: var(--fg); font-size: 12.5px; }
+  .tl .rp { justify-content: flex-start; padding-left: 12px; font-size: 12.5px; font-weight: 700; background: var(--raised); line-height: 1.3; }
+  .tl .rp small { display: block; font-weight: 400; color: var(--muted); }
+  .tl .c::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1.5px dashed var(--line); }
+  .tl .g1 { box-shadow: inset 3px 0 0 var(--fg); }
+  .tl .g2 { box-shadow: inset 2px 0 0 var(--surface), inset 4px 0 0 var(--line-2); }
+  .tl .hd.g2 { box-shadow: inset 2px 0 0 var(--raised), inset 4px 0 0 var(--line-2); }
+  .pr { position: relative; z-index: 1; font: 700 12.5px/1 var(--mono); padding: 7px 9px; border-radius: 999px; background: var(--fg); color: var(--surface); white-space: nowrap; }
+  .gates { list-style: none; margin: 8px 0 0; padding: 0; font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+  .gates li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: start; }
+  .gates i { height: 18px; margin-top: 2px; justify-self: center; width: 0; border-left: 3px solid var(--fg); }
+  .gates i.s { border-left: 2px solid var(--line-2); width: 4px; }
+  .prs { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13.5px; }
+  .prs li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 4px 10px; align-items: baseline; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  .prs li > b { font: 700 12px var(--mono); color: var(--muted); }
+  .prs small { display: block; color: var(--muted); font: 600 12px var(--mono); }
+  .prs time { font: 12px var(--mono); color: var(--muted); white-space: nowrap; }
+  .commits { margin: 10px 0 0; font-size: 13.5px; }
+
+  /* Screen stage (GitHub image diff, Chromatic): side by side, swipe, onion skin, and show changes.
+     Phone captures keep the device frame; web captures use .stage.wide (no frame, wide). If only one side exists, .stage.solo */
+  .stage { margin-top: 16px; border-radius: 14px; border: 1px solid var(--line-2); padding: 14px 18px 20px; background: var(--sunken); scroll-margin-top: 56px; }
+  .stage-bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-bottom: 14px; }
+  .stage-bar h4 { margin: 0; font-size: 14px; }
+  .stage-bar h4 small { font-weight: 400; color: var(--muted); font-size: 12.5px; margin-left: 6px; }
+  .tools { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .stage-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 340px); gap: 26px; align-items: center; }
+  .shots { --pos: 50%; --mix: .5; position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; max-width: 560px; margin: 0 auto; }
+  .frame { margin: 0; min-width: 0; }
+  .frame figcaption { height: 30px; display: flex; align-items: flex-start; gap: 6px; font-size: 12px; color: var(--muted); }
+  .frame.b figcaption { justify-content: flex-end; }
+  .bezel { background: var(--device); border-radius: 30px / 28px; padding: 7px; box-shadow: 0 0 0 1.5px var(--device-edge), 0 14px 26px rgba(0, 0, 0, .2); }
+  .shot { position: relative; line-height: 0; overflow: hidden; border-radius: 23px / 22px; }
+  .shot img { width: 100%; height: auto; display: block; background: #212121; }
+  /* Box coordinates are the % values produced by scripts/diff_boxes.py. Boxes are clipped only inside the image */
+  .mark { position: absolute; border: 2px solid; border-radius: 10px; pointer-events: none; transition: opacity .16s; }
+  .frame.a .mark { border-style: dashed; border-color: #e3b999; background-image: repeating-linear-gradient(135deg, rgba(227, 185, 153, .28) 0 2px, transparent 2px 8px); }
+  .frame.b .mark { border-color: #8ed6c4; box-shadow: 0 0 0 3px rgba(142, 214, 196, .28); }
+  .nomarks .mark { opacity: 0; }
+  .n { display: inline-block; flex: none; width: 21px; height: 21px; font: 700 11.5px/21px var(--mono); text-align: center; }
+  .mark .n { position: absolute; top: 4px; right: 4px; }
+  /* Small targets (a button, a counter): the number would cover the text, so hang it outside the box. .out below, .out.up above, add .l to align left */
+  .mark .n.out { top: auto; bottom: -25px; right: 0; }
+  .mark .n.out.up { bottom: auto; top: -25px; }
+  .mark .n.out.l { right: auto; left: 0; }
+  .n.a { background: #e3b999; color: #2a2b2e; border-radius: 4px; } .n.b { background: #8ed6c4; color: #1e2a27; border-radius: 50%; }
+  .shots[data-mode="swipe"], .shots[data-mode="onion"] { grid-template-columns: 1fr; gap: 0; max-width: 270px; }
+  .shots[data-mode="swipe"] .frame, .shots[data-mode="onion"] .frame { grid-area: 1 / 1; }
+  .shots[data-mode="swipe"] { touch-action: pan-y; cursor: ew-resize; user-select: none; -webkit-user-select: none; }
+  .shots[data-mode="swipe"] .frame.a .shot { clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
+  .shots[data-mode="swipe"] .frame.b .bezel { background: none; box-shadow: none; }
+  .shots[data-mode="swipe"] .frame.b .shot { clip-path: inset(0 0 0 var(--pos)); }
+  .shots[data-mode="onion"] .frame.b .bezel { background: none; box-shadow: none; }
+  .shots[data-mode="onion"] .frame.b .shot { opacity: var(--mix); }
+  .shots[data-mode="onion"] .frame.a .mark { display: none; }
+  .cut { display: none; position: absolute; top: 37px; bottom: 7px; left: calc(7px + (100% - 14px) * var(--p, .5)); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .6); pointer-events: none; }
+  .shots[data-mode="swipe"] .cut { display: block; }
+  .slide { display: none; max-width: 270px; margin: 12px auto 0; font-size: 12px; color: var(--muted); grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+  .stage[data-mode="swipe"] .slide, .stage[data-mode="onion"] .slide { display: grid; }
+  .slide input { width: 100%; accent-color: var(--fg); margin: 0; }
+  .capnote { margin: 14px auto 0; max-width: 560px; font-size: 12.5px; color: var(--muted); text-align: center; }
+  .capnote.offs { display: none; margin-top: 8px; } .stage[data-mode="swipe"] .offs, .stage[data-mode="onion"] .offs { display: block; }
+  /* Wide screens such as web or admin: no device frame, one wide column, numbered descriptions below */
+  .stage.wide .stage-grid { grid-template-columns: 1fr; }
+  .stage.wide .shots { max-width: none; }
+  /* Wide captures side by side would each shrink to under half their size: they stack instead (AS-IS above TO-BE), at a readable width */
+  .stage.wide .shots[data-mode="2up"] { grid-template-columns: 1fr; max-width: 860px; }
+  .stage.wide .shots[data-mode="swipe"], .stage.wide .shots[data-mode="onion"] { max-width: 860px; }
+  .stage.wide .slide { max-width: 860px; }
+  .stage.wide .capnote { max-width: none; }
+  .stage.wide .bezel { background: none; padding: 0; border-radius: 8px; box-shadow: 0 0 0 1px var(--line-2); }
+  .stage.wide .shot { border-radius: 8px; }
+  .stage.wide .cut { top: 30px; bottom: 0; left: calc(100% * var(--p, .5)); }
+  /* When only one side has a real artifact: the missing side is one line in the top band, the existing side is a single capture */
+  .missing { max-width: 880px; padding: 8px 12px; margin: 0 0 12px; border: 1.5px dashed var(--line-2); border-radius: 8px; color: var(--muted); font-size: 13px; background: var(--surface); }
+  .stage.solo .shots { grid-template-columns: 1fr; max-width: 280px; }
+  .stage.solo.wide .shots { max-width: 860px; }
+  .notes { min-width: 0; }
+  .notes h5 { margin: 0 0 8px; font-size: 12px; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+  .callouts { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; font-size: 14px; }
+  .callouts li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: start; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+  .callouts .n { margin-top: 1px; grid-row: 1 / 3; }
+  .callouts .lt { justify-self: start; }
+  /* One card per number: the AS-IS line and the TO-BE line of the same change sit together (side by side under a wide stage) */
+  .callouts .sides { display: grid; gap: 4px 18px; min-width: 0; }
+  .callouts .sides > span { min-width: 0; }
+  .callouts .sides .lt { margin-right: 6px; }
+  .stage.wide .callouts .sides { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .stage.wide .callouts .sides.one { grid-template-columns: minmax(0, 1fr); }
+  @media (max-width: 760px) { .stage.wide .callouts .sides { grid-template-columns: minmax(0, 1fr); } }
+  /* 되돌리기 line under the rollout table */
+  /* The decision reads first: the badge is filled and 13px, and rollback has the weight of a warning (.warn.back) */
+  .brk { font-size: 13px; line-height: 1.9; padding: 0 11px; }
+  .brk.upd { color: var(--surface); background: var(--fg); border-color: var(--fg); }
+  .warn.back { margin-top: 8px; border-style: dashed; }
+  .ship { margin: 16px 0 0; font-size: 13.5px; }
+  .ship b { font: 700 12px/1.7 var(--mono); letter-spacing: .04em; padding: 0 7px; border-radius: 4px; border: 1px solid var(--line-2); margin-right: 8px; white-space: nowrap; }
+  /* Question cards under the summary: what to decide, where to read first, how to check. Named by the question, not by a role */
+  .asks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; align-items: start; }
+  .asks .card { padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+  .asks h4 { margin: 0 0 8px; font-size: 14.5px; color: var(--fg); letter-spacing: 0; }
+  .asks ul { margin: 0; padding-left: 18px; font-size: 13.5px; }
+  .asks li { margin-top: 5px; }
+  .asks .size { margin: 0 0 6px; font-size: 13.5px; }
+  .asks details { margin-top: 8px; }
+  .asks summary { font-size: 13px; color: var(--muted); }
+  @media (max-width: 900px) { .asks { grid-template-columns: minmax(0, 1fr); } }
+  /* Right summary card: what changes for the user, one row per action */
+  .ft.uc td:first-child { font-weight: 600; min-width: 0; }
+  .ft.uc td:nth-child(2) { color: var(--muted); }
+  /* No text under 12px. The skeleton names (.sk) are kept in the markup for other domains but not shown */
+  .lt, .lanes, .scn-meta .ml > b, .pill, .dl td.ln, .p-head .st, .kd { font-size: 12px; }
+  .sk { display: none !important; }
+  /* The breaking rows of the compatibility table stand out as rows, not only as bold text */
+  .ft tr:has(.yn.yes) td { background: var(--raised); }
+  .ft tr:has(.yn.yes) td:first-child { box-shadow: inset 3px 0 0 var(--fg); }
+  /* Captures open at full size in a dialog */
+  .shot img { cursor: zoom-in; }
+  dialog.zoom { border: 0; padding: 0; max-width: 96vw; max-height: 94vh; background: var(--surface); border-radius: 10px; }
+  dialog.zoom::backdrop { background: rgba(20, 28, 38, .7); }
+  dialog.zoom img { display: block; max-width: none; }
+  dialog.zoom .zb { overflow: auto; max-width: 96vw; max-height: 94vh; }
+  /* Phone: the rail keeps its words. Three steps per row, every chip showing its text; tap targets at least 40px high */
+  @media (max-width: 760px) {
+    nav.toc a, .btn { min-height: 40px; display: inline-flex; align-items: center; }
+    .seg button { padding: 9px 13px; }
+  }
+  @media print { dialog.zoom { display: none; } }
+
+  details { margin-top: 10px; } summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+
+  @media (max-width: 980px) {
+    .stage-grid { grid-template-columns: 1fr; }
+    .two { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 760px) {
+    main { padding: 22px 14px 72px; }
+    h1 { font-size: 22px; }
+    .verdict { font-size: 17px; }
+    .scn { padding: 16px 14px 16px; border-radius: 14px; }
+    .railwrap { grid-template-columns: minmax(0, 1fr); --lh: 16px; --hh: 40px; }
+    .lanes { display: none; }
+    .rail { column-gap: 6px; grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 14px; }
+    .rail::before, .rail::after { display: none; }
+    .sh { flex-direction: column; gap: 1px; font-size: 12px; align-items: center; justify-content: flex-end; }
+    .sh .kd, .sh .sk { display: none; }
+    .scn-meta .ml { grid-template-columns: 1fr; }
+    .pill { padding: 0 4px; border-radius: 6px; }
+    .pill em { display: block; font-size: 11px; }
+    .railwrap { --lh: 22px; }
+    /* a capture shown at a third of its size: the numbers shrink with it so they do not cover their neighbours */
+    .mark .n { transform: scale(.72); transform-origin: top right; }
+    .mark .n.out.l { transform-origin: top left; }
+    .split { grid-template-columns: 1fr; gap: 22px; }
+    .split > .side.b::before { left: 50%; top: -17px; margin: 0 0 0 -5px; width: 10px; height: 13px; clip-path: polygon(38% 0, 62% 0, 62% 62%, 100% 62%, 50% 100%, 0 62%, 38% 62%); }
+    .logrow { grid-template-columns: 1fr; }
+    .logrow .ev { border-right: 0; border-bottom: 1px solid var(--line); }
+    .logrow .la { border-right: 0; border-bottom: 1px dashed var(--a-edge); }
+    .tl { grid-template-columns: 70px repeat(var(--cols, 4), minmax(0, 1fr)); }
+    .tl .rp { padding-left: 8px; font-size: 11.5px; }
+    .pr { font-size: 11px; padding: 6px 6px; }
+    .prs li { grid-template-columns: 18px minmax(0, 1fr); }
+    .prs time { grid-column: 2; }
+    .stage { padding: 12px 12px 16px; }
+    .shots { gap: 12px; }
+    .stage.wide .shots[data-mode="2up"] { grid-template-columns: 1fr; }
+    .bezel { border-radius: 20px / 19px; padding: 5px; }
+    .shot { border-radius: 15px / 14px; }
+    .cut { top: 35px; bottom: 5px; left: calc(5px + (100% - 10px) * var(--p, .5)); }
+    .tools { margin-left: 0; }
+    .cm-box { margin-left: 10px; }
+    .clog a { grid-template-columns: 17px minmax(0, 1fr); }
+    .clog .at, .clog a > span:last-child { grid-column: 2; }
+    .chain li { grid-template-columns: 64px minmax(0, 1fr); }
+  }
+  @media print {
+    .nojs-hide, nav.toc, .p-nav { display: none !important; }
+    .panel { display: block !important; }
+    .scn, .card, .stage { box-shadow: none; break-inside: avoid; }
+  }
+  /* Keep the toggle in the flow. Floating it on top overlaps long titles */
+  .theme-tg { display: flex; width: max-content; max-width: calc(100% - 32px); flex-wrap: wrap; margin: 12px 16px 0 auto; gap: 2px; padding: 2px; border-radius: 999px; background: var(--sunken); border: 1px solid var(--line); }
+  .theme-tg button { font: 600 12px/1 inherit; font-family: inherit; color: var(--muted); background: none; border: 0; border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+  .theme-tg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 0 0 1px var(--line-2); }
+  @media print { .theme-tg { display: none; } }
+</style>
+<script>try { if (localStorage.getItem("asis-tobe-theme") === "bloom") document.documentElement.dataset.theme = "bloom"; } catch (e) {}</script>
+</head>
+<body>
+<div class="theme-tg" role="group" aria-label="Color theme"><button type="button" data-t="dusk">Dusk</button><button type="button" data-t="bloom">Bloom</button></div>
+<script>(function () { var r = document.documentElement; var g = document.querySelector(".theme-tg"); function sync() { var t = r.dataset.theme || "dusk"; g.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.t === t)); }); } g.addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; if (b.dataset.t === "bloom") r.dataset.theme = "bloom"; else delete r.dataset.theme; try { localStorage.setItem("asis-tobe-theme", b.dataset.t); } catch (x) {} sync(); }); sync(); })();</script>
+<!-- Fixed strings and their en equivalents (replace them in the English edition)
+  시나리오별 전후 Scenarios, before and after · 바뀜 changed · 영향 경로 Impact chain
+  Cells: 준비 Setup · 요청 Request · 응답 Response · 화면 Screen · 로그 Logs · 결과 Outcome
+  Skeleton: 전제 조건 Precondition · 트리거 Trigger · 처리 Process · 접점 Touchpoint · 감사 추적 Audit trail · 사후 조건 Postcondition
+  Head: 변경 요청 Change request · 전환 계획 Cutover · 전환 없음 No cutover · 신설 New · 이 행동을 할 수 없다 This action is not possible
+  같음 Same · 해당 없음 Not applicable · 실물 없음 Not available · 새로고침 전까지 깨짐 Broken until reloaded · 새로고침 전까지 Until reloaded (재시작 restart, 업데이트 update)
+  되돌리기 가능 Rollback possible · 되돌리기 불가 No rollback · 되돌리기 확인하지 못함 Rollback not verified · 배포 Ship · 확인하지 못함 Not verified
+  머지와 배포 순서 Merge and rollout order · 커밋 Commits
+  Question cards: 정해야 할 것 To decide · 먼저 볼 곳 Where to read first · 직접 확인하는 법 How to check · 전제와 테스트 Premises and tests · 나머지 N건과 근거 N more, with evidence · 기존 데이터 Existing data
+  사용자에게 달라지는 것 What changes for users · 사용자 행동 User action · 지금 Now · 바뀐 뒤 After
+  추가 Added · 빠짐 Removed · 바뀜 Changed
+  여섯 단계 모두 펼치기 Expand all six steps · 이전 단계 Previous · 다음 단계 Next
+  화면 전후 Screens, before and after · 나란히 2-up · 스와이프 Swipe · 겹쳐 보기 Onion skin · 바뀐 곳 표시 Show changes · 바뀐 곳 What changed
+  합쳐서 Unified · 나란히 Split
+  Layers: 데이터 Data · API 스펙 API contract · 동작 Behavior · 화면 Screen · 사용자 영향 User impact
+  payload 전문 Full payload · 호환성 Compatibility · 변경 없는 레이어 Unchanged layers · 의도 밖 변경 Unintended changes
+  Table headers: 필드 Field · 변경 Change · 리소스 Resource · 시맨틱 변경 Semantic change · 입력과 상태 Input or state · 근거 Evidence
+           호출처 Consumer · 구 스펙 사용 Uses old contract · breaking 조건 Breaks when · 안전해지는 시점 Safe after
+           이슈 AC와 사용자 행동 Acceptance criterion (no issue: 사용자 행동 User action) · 맡은 PR Covered by
+  Badge: breaking change · 배포 순서를 어기면 깨짐 Breaks if rollout order is wrong · 새로고침 전까지 깨짐 Broken until reloaded · 호환 Compatible
+-->
+<main>
+  <h1>{{title: one sentence on the change the user sees}}</h1>
+  <p class="lead">{{issue key, if any}} {{one or two sentences on what changes and why}}</p>
+  <div class="meta">
+    <span class="tag">{{repo}}</span>
+    <span>PR {{n}}건</span>
+    <span>{{date}}</span>
+    <!-- PRs and shas are written only once, in the summary's merge order table -->
+  </div>
+  <ul class="layers">
+    <!-- Changed layers are on, unchanged layers are off -->
+    <li class="off">데이터</li><li class="on">API 스펙</li><li class="on">동작</li><li class="on">화면</li><li class="on">사용자 영향</li>
+  </ul>
+
+  <!-- Summary. A reader must be able to decide from this alone. 3 or fewer per group -->
+  <section class="sum" aria-label="요약">
+    <div class="card">
+      <!-- One badge. Choose the worst case (yes > ord > upd > no). The four are mutually exclusive.
+           yes  breaking change          an old call site stays broken until it is replaced
+           ord  배포 순서를 어기면 깨짐  does not break if the order is kept
+           upd  새로고침 전까지 깨짐     no order to keep; an old consumer already running is broken until it is refreshed.
+                                         Name what refreshes it: 새로고침 for a browser tab, 재시작 for a client process, 업데이트 for an installed app
+           no   호환                     does not break in whatever order it ships -->
+      <!-- Badge text: yes「breaking change」 ord「배포 순서를 어기면 깨짐」 upd「새로고침 전까지 깨짐」(or 재시작, 업데이트) no「호환」 -->
+      <span class="brk {{yes|ord|upd|no}}">{{the badge text for the class you picked}}</span>
+      <!-- Conclusion within 100 characters for ko, 160 for en. In the user's words: no field names, status codes, or other identifiers -->
+      <p class="verdict">{{one-sentence verdict: what changes, and what differs for whom}}</p>
+      <!-- For every badge except no; delete the block if no. Label: 배포 순서 for badge yes or ord, 새로고침 전까지 (or 재시작, 업데이트) for badge upd.
+           Body: who experiences what, and until when; two sentences at most. The rollout order table covers the preventing order -->
+      <div class="warn"><b>{{배포 순서 / 새로고침 전까지}}</b><span>{{who experiences what, and until when}}</span></div>
+      <!-- Only when shipping loses or hides data users already have (a restart empties what AS-IS kept in memory, rows are not carried over).
+           With any badge, 호환 included; otherwise delete. What data, at which moment, whether it can be carried over; two sentences at most -->
+      <div class="warn"><b>기존 데이터</b><span>{{what data is lost or hidden when this ships, and whether it can be carried over}}</span></div>
+      <!-- Rollback, with the weight of a warning when it is not possible. Label is one of: 되돌리기 가능 / 되돌리기 불가 / 되돌리기 확인하지 못함.
+           Body in plain words: what happens if we go back, and what the way back is (a backup taken before the deploy). The error text may follow in <code> -->
+      <div class="warn back"><b>{{되돌리기 가능 / 불가 / 확인하지 못함}}</b><span>{{what going back means, and the way back}}</span></div>
+      <!-- One shipping unit and no order to keep: this one line replaces the table below; delete the h4, the table and its note.
+           Say what is done to ship, what runs when it ships (a migration), and whether anything is in production at all -->
+      <p class="ship"><b>배포</b>{{how it ships, what runs then, what is released now}}</p>
+      <!-- Two or more rows only (several PRs, or a step the breakage depends on). With one row, use the 배포 line above instead -->
+      <h4>머지와 배포 순서</h4>
+      <table class="ft">
+        <thead><tr><th>순서</th><th>PR</th><th>머리 커밋</th><th>먼저 끝낼 것</th></tr></thead>
+        <!-- One phrase per cell. 「먼저 끝낼 것」 (finish first) holds only numbers and events, such as 「없음」, 「1 머지」, 「3 머지, 4 의 prod 배포」. Repo names only on PRs not in the default repo -->
+        <tbody><tr><td>1</td><td><a href="{{PR URL}}">#{{n}}</a> {{one word}}</td><td><code>{{head sha}}</code></td><td>{{one of, in Korean: 없음 / N 머지 / N 의 배포 / N 의 prod 배포 / N 의 재시작}}</td></tr></tbody>
+        <!-- A row that is not a PR (a deploy, a codegen regeneration, an uncommitted working tree): no link, the action as text, and 「없음」 or 「커밋 전」 instead of a sha:
+             <tr><td>2</td><td>웹 배포</td><td>없음</td><td>1 머지</td></tr>
+             <tr><td>1</td><td>작업 트리 커밋</td><td>커밋 전</td><td>없음</td></tr> -->
+      </table>
+      <p class="note">{{first sentence, only with PRs in two or more repos: 리포를 적지 않은 PR 은 <default repo> 다. Then operational notes the table cannot hold, such as stacked-PR merge cautions. If none, the first sentence only}}</p>
+    </div>
+    <div class="card">
+      <!-- What changes for the user, one row per thing a user does. Six rows at most, the action in the user's words, no identifiers.
+           지금 is one phrase (「없음」 when the action is new). A change with no user-visible effect has no row here.
+           The per-step detail is in the scenario rails; this card does not list requests, responses, or logs -->
+      <h4>사용자에게 달라지는 것</h4>
+      <table class="ft uc">
+        <thead><tr><th>사용자 행동</th><th>지금</th><th>바뀐 뒤</th></tr></thead>
+        <tbody><tr><td>{{what the user does}}</td><td>{{one phrase, or 없음}}</td><td>{{one phrase}}</td></tr></tbody>
+      </table>
+      <!-- What happens to existing data, if anything, and where the evidence is -->
+      <p class="src">{{one line on existing data, e.g. 기존 할 일은 모두 「Inbox」 목록으로 들어간다}} 단계별 근거는 아래 <a href="#s1">시나리오</a>에 있다.</p>
+    </div>
+  </section>
+
+  <!-- Three questions a reader arrives with, whoever they are. Always all three cards, in this order; the cards are named by the question,
+       never by a role (teams differ in who reads). Each card shows three lines at most; the rest goes in its <details>.
+       A card with nothing to say keeps one line: 「없음. {{evidence}}」. Rules for each card: references/document.md, "Question cards" -->
+  <section class="asks" aria-label="읽는 사람이 묻는 것">
+    <div class="card" id="ask-decide">
+      <!-- What this change decided on someone's behalf: defaults, limits, what gets deleted, how long things are kept, on-screen wording,
+           behaviour in edge cases. Each line is a question someone can answer yes or no to, with the current choice stated -->
+      <h4>정해야 할 것</h4>
+      <ul><li>{{the choice the change made, then the question, e.g. 기본 목록 이름이 영어 「Inbox」다. 한국어로 바꿀까?}}</li></ul>
+      <!-- Folded: the remaining items, then one line of file:line evidence per item, the visible ones included -->
+      <details><summary>나머지 {{n}}건과 근거</summary><ul><li>{{}}</li></ul></details>
+    </div>
+    <div class="card" id="ask-read">
+      <!-- Where to start reading the change. The size line, then the files to open first with one clause on why each.
+           Only what the diff and the code state (a comment naming a premise, a migration's own header). This is not a risk hunt -->
+      <h4>먼저 볼 곳</h4>
+      <p class="size">파일 {{n}}개, <b>+{{n}} −{{n}}</b>, 새 파일 {{n}}개</p>
+      <ul><li><code>{{file or file:line}}</code>: {{what is there, in one clause}}</li></ul>
+      <details><summary>전제와 테스트</summary><ul>
+        <li>{{a premise the code states, with file:line}}</li>
+        <li>테스트 함수: {{file n→n, …}}. 실행 결과: {{통과 n개 / 확인하지 못함}}</li>
+      </ul></details>
+    </div>
+    <div class="card" id="ask-check">
+      <!-- How to see it for yourself. Check items first: what to do and what must happen. When the badge is not 호환, the first item is
+           the warned breakage and, if rollback is not possible, one item checks that. Then, folded, how to get and run each version and the seed data -->
+      <h4>직접 확인하는 법</h4>
+      <ul><li>{{what to do, then what must happen}}</li></ul>
+      <details><summary>실행 방법과 나머지 {{n}}건</summary><ul>
+        <li>받기: {{branch, PR, or 커밋 전 작업 트리}}</li>
+        <li>빌드와 실행: <code>{{commands}}</code></li>
+        <li>시드: {{the data the captures and checks start from}}</li>
+        <li>{{more check items}}</li>
+      </ul></details>
+    </div>
+  </section>
+
+  <h2>시나리오별 전후</h2>
+  <p class="lead">{{one-line conclusion of this section, e.g. two of three scenarios change only the screen; request and response stay the same}}</p>
+  <!-- One card per scenario. Mini rail of 6 cells: changed cell <i class="d">, unchanged cell <i>. If new, 「신설」 in place of {{n}}/6 바뀜 -->
+  <nav class="picks" aria-label="시나리오 고르기">
+    <a class="pick" href="#s1"><small><span>시나리오 1</span><span>{{n}}/6 바뀜</span></small><strong>{{scenario name}}</strong>
+      <span class="mini" aria-hidden="true"><i></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i></span></a>
+  </nav>
+  <p class="legend">
+    <span><i class="lt a">AS-IS</i>점선과 빗금</span>
+    <span><i class="lt b">TO-BE</i>실선과 채움</span>
+    <span>걸친 단계 하나는 두 쪽이 같다는 뜻이다</span>
+  </p>
+
+  <!-- ───────────── Scenario 1 ─────────────
+       Never reorder or drop the 6 skeleton cells. id is s<number>; panel id is s<number>-p<cell> (p1~p6).
+       Cell names follow the domain mapping table (references/domains.md), with the skeleton name (.sk) small beside them.
+       The head block (.scn-meta, id s<number>-p7) holds the evidence row (change request) and the cutover row (cutover). Not in the rail; not counted.
+       data-default is the cell to expand first (the most important changed cell).
+       Chips: changed cell    <a class="step diff" …><span class="sh">…<i class="kd add|del|mod">…</i></span><span class="pill a hatch"><em>AS-IS short value</em></span><span class="pill b"><em>TO-BE short value</em></span></a>
+              unchanged cell  <a class="step" …><span class="sh">…</span><span class="pill m"><em>같음</em></span></a>
+              new (신설)      delete .pill a and keep only .pill b
+       Chip values are about ten characters (e.g. 「+ imageQuality」, 「정렬 3종」). At 420px the rail folds to three steps per row and the chips keep their text -->
+  <section class="scn" id="s1" data-default="2">
+    <div class="scn-head">
+      <span class="scn-no">시나리오 1</span>
+      <h3>{{actor and one action or event, e.g. 사용자가 데스크톱 웹에서 /settings 를 연다}}</h3>
+      <span class="tally">{{n}}/6 바뀜</span><!-- If new, 「신설」 -->
+    </div>
+
+    <!-- Head block. Its id receives the old seventh-cell address (#s<number>-p7).
+         Evidence row: with a PR, .prs and the commit row; before a PR, the commit row. If it would only repeat the summary (every scenario
+         comes from the same PRs, or there is no PR), delete the row; never write a row that only points back to the summary.
+         Cutover row: only when this scenario has an order or a breakage of its own: class="ml cutover warned" and one line. With two or more repos, .tl (--cols is the PR count) and .gates.
+         The breakage already in the summary's warning is not repeated here. If nothing remains, put only <p>전환 없음. {{evidence}}</p> in class="ml cutover".
+         If every row is deleted, delete the .scn-meta block and leave <span id="s1-p7"></span> in its place.
+         If new, put <div class="ml"><b>신설</b><p class="new">AS-IS: 이 행동을 할 수 없다. {{evidence}}</p></div> at the top; otherwise delete it -->
+    <div class="scn-meta" id="s1-p7">
+      <div class="ml"><b>신설</b><p class="new">AS-IS: 이 행동을 할 수 없다. {{evidence}}</p></div>
+      <div class="ml"><b>변경 요청</b><div>
+        <ol class="prs">
+          <li><b>1</b><span><small>{{repo}} #{{n}}</small>{{PR title}}</span><time>{{merge time, or open}}</time></li>
+        </ol>
+        <p class="commits">{{repo}} 커밋: <i class="lt a">AS-IS</i> <code>{{base sha}}</code><i class="arr" role="img" aria-label="에서"></i><i class="lt b">TO-BE</i> <code>{{branch sha}}</code></p>
+      </div></div>
+      <div class="ml cutover warned"><b>전환 계획</b><div>
+        <p>{{one line: the order to keep and what this scenario experiences. If none, 「전환 없음. <evidence>」}}</p>
+        <div class="tl" style="--cols:2" role="img" aria-label="머지 순서. {{1 repo #n, 2 repo #n}}">
+          <div class="hd"></div>
+          <div class="hd"><b>1</b>{{time}}</div><div class="hd g1"><b>2</b>{{time}}</div>
+          <div class="rp"><span>{{repo}}<small>{{role}}</small></span></div>
+          <div class="c"><span class="pr">#{{n}}</span></div><div class="c g1"></div>
+          <div class="rp">{{repo}}</div>
+          <div class="c"></div><div class="c g1"><span class="pr">#{{n}}</span></div>
+        </div>
+        <ul class="gates">
+          <li><i aria-hidden="true"></i><span>굵은 세로선은 지켜야 하는 순서다. {{why}}</span></li>
+          <li><i class="s" aria-hidden="true"></i><span>가는 세로선은 어겨도 깨지지 않는 순서다.</span></li>
+        </ul>
+      </div></div>
+    </div>
+
+    <div class="railwrap">
+      <div class="lanes" aria-hidden="true"><span class="a">AS-IS</span><span class="b">TO-BE</span></div>
+      <div class="rail">
+        <a class="step" href="#s1-p1" data-step="1"><span class="sh"><b>1</b><span class="nm">준비<span class="sk">전제 조건</span></span></span><span class="pill m"><em>같음</em></span></a>
+        <a class="step diff" href="#s1-p2" data-step="2"><span class="sh"><b>2</b><span class="nm">요청<span class="sk">트리거</span></span><i class="kd add" aria-hidden="true">+</i></span><span class="pill a hatch"><em>{{}}</em></span><span class="pill b"><em>{{}}</em></span></a>
+        <a class="step diff" href="#s1-p3" data-step="3"><span class="sh"><b>3</b><span class="nm">응답<span class="sk">처리</span></span><i class="kd add" aria-hidden="true">+</i></span><span class="pill a hatch"><em>{{}}</em></span><span class="pill b"><em>{{}}</em></span></a>
+        <a class="step diff" href="#s1-p4" data-step="4"><span class="sh"><b>4</b><span class="nm">화면<span class="sk">접점</span></span><i class="kd add" aria-hidden="true">+</i></span><span class="pill a hatch"><em>{{}}</em></span><span class="pill b"><em>{{}}</em></span></a>
+        <a class="step diff" href="#s1-p5" data-step="5"><span class="sh"><b>5</b><span class="nm">로그<span class="sk">감사 추적</span></span><i class="kd del" aria-hidden="true">−</i></span><span class="pill a hatch"><em>{{}}</em></span><span class="pill b"><em>{{}}</em></span></a>
+        <a class="step diff" href="#s1-p6" data-step="6"><span class="sh"><b>6</b><span class="nm">결과<span class="sk">사후 조건</span></span><i class="kd mod" aria-hidden="true">~</i></span><span class="pill a hatch"><em>{{}}</em></span><span class="pill b"><em>{{}}</em></span></a>
+      </div>
+    </div>
+    <div class="rail-foot nojs-hide">
+      <span>칩을 누르면 그 단계가 아래에 펼쳐진다. 좌우 화살표 키로도 옮긴다.</span>
+      <button class="btn" type="button" data-all aria-pressed="false">여섯 단계 모두 펼치기</button>
+    </div>
+
+    <div class="panels">
+      <!-- Panel head: <h4 class="p-head"><b>n</b>cell name <span class="sk">skeleton name</span> <small>what it looks at</small><span class="st d">gist of the change</span></h4>
+           Unchanged step: <span class="st">같음</span> and <div class="side same"><b>같음.</b> {{one line of evidence}}</div>
+           Not applicable: <div class="side same"><b>해당 없음.</b> {{reason}}</div>
+           Evidence is one line at the end of the panel: <p class="src">근거: …</p> -->
+
+      <!-- 1 준비 (setup): if unchanged, one cell. If changed, side-by-side text (a list if there are several conditions) -->
+      <article class="panel" id="s1-p1" data-step="1">
+        <h4 class="p-head"><b>1</b>준비 <span class="sk">전제 조건</span><span class="st">같음</span></h4>
+        <div class="side same"><b>같음.</b> {{account, device and width, data that must already exist, settings}}</div>
+      </article>
+
+      <!-- 2 요청 (request): the line diff printed by scripts/code_diff.py with --view unified (the panel is narrow).
+           A line that carries risk gets a memo with --note "<line>=<risk type>: <text>": like a review comment, one or two sentences on why that line can break.
+           The markup below shows the shape the script prints; paste the script's output over it, do not write it by hand.
+           Long payloads: --context 3 folds the unchanged lines -->
+      <article class="panel" id="s1-p2" data-step="2">
+        <h4 class="p-head"><b>2</b>요청 <span class="sk">트리거</span> <small>{{body of what}}</small><span class="st d">{{one field added}}</span></h4>
+        <div class="dv" data-view="unified">
+          <div class="dv-head">
+            <span class="verb">{{POST}}</span>
+            <span class="path">{{/v1/…}}</span>
+            <span class="stat" aria-label="{{n}}줄 추가, {{n}}줄 삭제"><span class="p">+{{n}}</span><span class="m">−{{n}}</span></span>
+            <span class="seg nojs-hide" role="group" aria-label="차이 보기 방식"><button type="button" data-view="split" aria-pressed="false">나란히</button><button type="button" data-view="unified" aria-pressed="true">합쳐서</button></span>
+          </div>
+          <div class="dv-body">
+            <table class="dl v-uni" aria-label="요청 본문 차이, 합쳐서 보기">
+              <tr><td class="ln">1</td><td class="ln">1</td><td class="sg"></td><td class="cd">{</td></tr>
+              <tr class="fold"><td colspan="4">{{folded n unchanged fields}}</td></tr>
+              <tr class="del"><td class="ln">2</td><td class="ln"></td><td class="sg"><span class="vh">삭제</span>−</td><td class="cd">  <mark>{{removed line}}</mark>,</td></tr>
+              <tr class="add"><td class="ln"></td><td class="ln">2</td><td class="sg"><span class="vh">추가</span>+</td><td class="cd">  <mark>{{added line}}</mark>,</td></tr>
+              <tr class="cm"><td colspan="4"><div class="cm-in"><div class="cm-box"><b>{{risk type, e.g. 배포 순서}}</b>{{why this line is risky}}</div></div></td></tr>
+              <tr><td class="ln">3</td><td class="ln">3</td><td class="sg"></td><td class="cd">}</td></tr>
+            </table>
+            <table class="dl sp v-split" aria-label="요청 본문 차이, 나란히 보기">
+              <tr><td class="ln">1</td><td class="sg"></td><td class="cd">{</td><td class="ln mid">1</td><td class="sg"></td><td class="cd">{</td></tr>
+              <tr><td class="ln del">2</td><td class="sg del">−</td><td class="cd del">  <mark>{{}}</mark>,</td><td class="ln mid add">2</td><td class="sg add">+</td><td class="cd add">  <mark>{{}}</mark>,</td></tr>
+              <!-- A line present on one side only: the three cells on the other side are <td class="ln gap"></td><td class="sg gap"></td><td class="cd gap"></td> -->
+              <tr><td class="ln">3</td><td class="sg"></td><td class="cd">}</td><td class="ln mid">3</td><td class="sg"></td><td class="cd">}</td></tr>
+            </table>
+          </div>
+          <ul class="dv-notes"><li>{{n}}번 줄: {{same text as the line note}}</li></ul>
+        </div>
+        <p class="src">근거: {{fixture path, test name}}</p>
+      </article>
+
+      <!-- 3 응답 (response): field table (field, change, resource). It counts as changed only when the returned value or rule changes. If only what the app reads grew, it is 「같음」 and the screen cell changes.
+           If a table by input branch is needed, send it to the Behavior layer section and keep only one representative branch here -->
+      <article class="panel" id="s1-p3" data-step="3">
+        <h4 class="p-head"><b>3</b>응답 <span class="sk">처리</span> <small>{{response of what}}</small><span class="st d">{{one field added}}</span></h4>
+        <table class="ft">
+          <thead><tr><th>필드</th><th>변경</th><th>리소스</th></tr></thead>
+          <tbody>
+            <tr class="add"><td><code>{{field}}</code> <code>{{type}}</code></td><td><span class="chg"><i class="kd add" aria-hidden="true">+</i>추가</span></td><td>{{which response}}</td></tr>
+            <tr class="del"><td><code>{{field}}</code></td><td><span class="chg"><i class="kd del" aria-hidden="true">−</i>빠짐</span></td><td>{{}}</td></tr>
+            <!-- Same name and type, different meaning or accepted values: a plain row with the ~ marker -->
+            <tr><td><code>{{field}}</code></td><td><span class="chg"><i class="kd mod" aria-hidden="true">~</i>바뀜</span></td><td>{{what changed in meaning}}</td></tr>
+            <tr><td><code>{{remaining fields}}</code></td><td><span class="chg eq">같음</span></td><td>{{}}</td></tr>
+          </tbody>
+        </table>
+        <p class="src">근거: {{codegen diff, PR}}</p>
+      </article>
+
+      <!-- 4 화면 (screen): side-by-side text, one line each. Captures go in the screen stage at the end of the scenario -->
+      <article class="panel" id="s1-p4" data-step="4">
+        <h4 class="p-head"><b>4</b>화면 <span class="sk">접점</span> <small>{{which screen}}</small><span class="st d">{{button added}}</span></h4>
+        <!-- New feature (신설): <div class="split solo"> with only the .side b child. A cell that really is unchanged in a new scenario (often 로그) keeps .pill m 「같음」 with its evidence -->
+        <div class="split">
+          <div class="side a hatch"><i class="lt a">AS-IS</i><p>{{}}</p></div>
+          <div class="side b"><i class="lt b">TO-BE</i><p>{{}}</p></div>
+        </div>
+        <p class="src">캡처는 아래 <a href="#s1-stage">화면 전후</a>에서 본다. 근거: {{file}}</p>
+      </article>
+
+      <!-- 5 로그 (log): one event per row. Branch (server log, app error, analytics event) and name, emitted (●) or not (○) -->
+      <article class="panel" id="s1-p5" data-step="5">
+        <h4 class="p-head"><b>5</b>로그 <span class="sk">감사 추적</span> <small>이벤트 {{n}}줄</small><span class="st d">{{one removed, one added}}</span></h4>
+        <div class="logs">
+          <div class="logrow">
+            <div class="ev"><div class="ch"><i class="kd del" aria-hidden="true">−</i>{{app analytics event}}</div><code>{{event name}}</code></div>
+            <div class="la hatch"><i class="lt a">AS-IS</i><div class="emit"><i class="dot" aria-hidden="true"></i>남긴다</div>{{when}}</div>
+            <div class="lb"><i class="lt b">TO-BE</i><div class="emit"><i class="dot off" aria-hidden="true"></i>남기지 않는다</div>{{why}}</div>
+          </div>
+        </div>
+        <p class="legend"><span><i class="dot" aria-hidden="true"></i>남는다</span><span><i class="dot off" aria-hidden="true"></i>남지 않는다</span></p>
+        <p class="src">근거: {{logger and event call file:line}}</p>
+      </article>
+
+      <!-- 6 결과 (result): do not restate the screen cell. Only what persists afterward. Side-by-side text. If there are comparable numbers (cost, count, time), bars (.cost) on top. Width is a ratio with the larger side as 100% -->
+      <article class="panel" id="s1-p6" data-step="6">
+        <h4 class="p-head"><b>6</b>결과 <span class="sk">사후 조건</span> <small>{{state that remains}}</small><span class="st d">바뀜</span></h4>
+        <div class="cost" role="img" aria-label="{{comparison sentence}}">
+          <div class="cbar"><i class="lt a">AS-IS</i><div class="track"><div class="fill a hatch" style="width:{{ratio}}%">{{value}}</div></div></div>
+          <div class="cbar"><i class="lt b">TO-BE</i><div class="track"><div class="fill b" style="width:100%">{{value}}</div></div></div>
+        </div>
+        <div class="split rich">
+          <div class="side a hatch"><i class="lt a">AS-IS</i><p>{{DB row, what the user ends up holding}}</p></div>
+          <div class="side b"><i class="lt b">TO-BE</i><p>{{}}</p></div>
+        </div>
+        <p class="src">근거: {{}}</p>
+      </article>
+
+    </div>
+
+    <!-- Screen stage. Phone captures as is; web captures use class="stage wide".
+         Two or more captures in one scenario: repeat this block once per capture, ids s1-stage, s1-stage-2, numbers restart at 1 in each.
+         If only one side has a real artifact, class="stage solo": delete .tools and .frame.a, .slide, .cut, and under stage-bar put
+         <p class="missing">실물 없음(AS-IS): {{one-sentence reason}}</p>.
+         One box each: <span class="mark" style="left:x%;top:y%;width:w%;height:h%"><span class="n a|b">number</span></span>.
+         The same change gets the same number on both sides; a change on one side only is marked only on that side -->
+    <div class="stage" id="s1-stage" data-mode="2up">
+      <div class="stage-bar">
+        <h4>화면 전후 <small>{{which screen}}</small></h4>
+        <div class="tools nojs-hide">
+          <span class="seg" role="group" aria-label="화면 비교 방식"><button type="button" data-mode="2up" aria-pressed="true">나란히</button><button type="button" data-mode="swipe" aria-pressed="false">스와이프</button><button type="button" data-mode="onion" aria-pressed="false">겹쳐 보기</button></span>
+          <button class="btn" type="button" data-marks aria-pressed="true">바뀐 곳 표시</button>
+        </div>
+      </div>
+      <div class="stage-grid">
+        <div class="viewer">
+          <div class="shots" data-mode="2up">
+            <figure class="frame a"><figcaption><i class="lt a">AS-IS</i></figcaption>
+              <div class="bezel"><div class="shot"><img src="{{path}}" width="{{w}}" height="{{h}}" alt="AS-IS. {{what is visible}}">
+                <span class="mark" style="left:{{x}}%;top:{{y}}%;width:{{w}}%;height:{{h}}%"><span class="n a" aria-hidden="true">1</span></span></div></div></figure>
+            <figure class="frame b"><figcaption><i class="lt b">TO-BE</i></figcaption>
+              <div class="bezel"><div class="shot"><img src="{{path}}" width="{{w}}" height="{{h}}" alt="TO-BE. {{what is visible}}">
+                <span class="mark" style="left:{{x}}%;top:{{y}}%;width:{{w}}%;height:{{h}}%"><span class="n b" aria-hidden="true">1</span></span></div></div></figure>
+            <span class="cut" aria-hidden="true"></span>
+          </div>
+          <label class="slide"><span>AS-IS</span><input type="range" min="0" max="100" value="50" aria-label="AS-IS 와 TO-BE 사이 위치"><span>TO-BE</span></label>
+          <!-- If the two captures' scroll positions differ, they misalign when overlaid. Keep this only then -->
+          <p class="capnote offs">{{why the two captures look misaligned}}</p>
+          <!-- One phrase: mock responses or a real server (「mock 응답」 / 「실제 서버(mock 아님)」). Size, locale, commit, and how the boxes were found go in the base table -->
+          <p class="capnote">{{mock responses or real server}}</p>
+        </div>
+        <div class="notes">
+          <h5>바뀐 곳</h5>
+          <ol class="callouts">
+            <!-- One <li> per number, not one per side. A change on one side only: class="sides one" with that side's line alone
+                 (and the number is n a for an AS-IS-only change) -->
+            <li><span class="n b" aria-hidden="true">1</span><div class="sides">
+              <span><i class="lt a">AS-IS</i>{{before; screen text in 「」}}</span>
+              <span><i class="lt b">TO-BE</i>{{after}}</span>
+            </div></li>
+          </ol>
+          <!-- What the next person capturing must know, such as mock vs. real differences or substitute captures -->
+          <!-- Only what a reader of the screens must know (a substitute capture, a mock that differs from the real payload). Delete if none.
+               How the boxes were found, checksums, and tool names go in the 비고 cell of 「기준 커밋과 캡처 출처」, not here -->
+          <p class="note">{{}}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Once, after the last scenario. Rows: AS-IS base and TO-BE head per repo, then each capture source. With two or more E2E runs add a second table (회차 | 커밋 | 확인한 것 | 결과) -->
+  <h3 id="base">기준 커밋과 캡처 출처</h3>
+  <table class="ft">
+    <thead><tr><th>구분</th><th>리포</th><th>커밋</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td>AS-IS</td><td>{{repo}}</td><td><code>{{short base sha}}</code></td><td>{{one phrase, e.g. PR base}}</td></tr>
+      <tr><td>TO-BE</td><td>{{repo}}</td><td><code>{{short head sha}}</code></td><td>{{one phrase, e.g. PR head}}</td></tr>
+      <tr><td>캡처</td><td>{{repo}}</td><td><code>{{sha the screenshots were taken at}}</code></td><td>{{which stages; mock or real}}</td></tr>
+      <!-- Two or more measured runs: a second table right below this one, one row per run:
+           <table class="ft"><thead><tr><th>회차</th><th>커밋</th><th>확인한 것</th><th>결과</th></tr></thead>
+           <tbody><tr><td>1</td><td><code>{{sha}}</code></td><td>{{one phrase}}</td><td>{{one phrase}}</td></tr></tbody></table>
+           A run that mixes versions (an old page against the new server) names both in the commit cell: 「화면 <sha>, 서버 커밋 전」 -->
+      <!-- Uncommitted TO-BE: the commit cell is 「커밋 전」 without <code>. Captures taken at two commits get one 캡처 row each (AS-IS 쪽, TO-BE 쪽) -->
+    </tbody>
+  </table>
+
+  <h2>영향 경로</h2>
+  <p class="lead">{{one-line conclusion of this section}}</p>
+  <!-- 7 nodes or fewer. If more, split by repo. Consecutive nodes in the same repo and layer merge into one node.
+       Only 1~2 .focal: the breaking link or the result the user sees. .cross is a link that crosses a repo or network boundary to the next node.
+       Change markers: <i class="kd add">+</i> <i class="kd del">−</i> <i class="kd mod">~</i>. Not on nodes that only pass through.
+       Two branches (the path forks, or two unrelated chains): one <ol class="chain"> per branch, each preceded by
+       <p class="src">갈래 {{n}}: {{what this branch is, in a few words}}</p>. Three branches at most.
+       The 7-node limit is per branch; the 1~2 .focal are for the whole path -->
+  <ol class="chain">
+    <li class="cross"><b>API 스펙</b><span><span class="claim"><i class="kd mod" aria-hidden="true">~</i>{{one-sentence claim}}<span class="where">{{repo, module}}</span></span><span class="ev"><code>{{path:line}}</code></span></span></li>
+    <li><b>화면</b><span><span class="claim"><i class="kd add" aria-hidden="true">+</i>{{}}<span class="where">{{repo, screen}}</span></span><span class="ev"><code>{{path:line}}</code></span></span></li>
+    <li class="focal"><b>사용자</b><span><span class="claim">{{what the user can now do, or what breaks}}</span></span></li>
+  </ol>
+
+  <!-- Layer sections: keep only changed layers, delete the rest, then add one line each to 「변경 없는 레이어」 at the very end.
+       Do not repeat what the scenario panels already showed. This is the place for exhaustive tables and full text (long payloads, all fields, all call sites).
+       If there are more screens outside the scenarios (a settings screen, etc.), add another .stage to the screen section -->
+
+  <h2>API 스펙</h2>
+  <p class="lead">{{one-line conclusion of this section}}</p>
+  <table class="ft cmp">
+    <thead><tr><th>필드</th><th>AS-IS</th><th>TO-BE</th><th>시맨틱 변경</th></tr></thead>
+    <tbody>
+      <tr><td><code>{{}}</code></td><td>{{}}</td><td>{{}}</td><td>{{}}</td></tr>
+      <!-- A field whose name or type changed: <td colspan="2"><code class="old">start_time</code> → <code class="new">starts_at</code></td> -->
+    </tbody>
+  </table>
+  <!-- More than four rows: wrap the table in <details><summary>필드별 전후 표 ({{n}}행)</summary> … </details> -->
+  <details><summary>payload 전문</summary>
+    <!-- Paste the output of scripts/code_diff.py (a .dv with both views; the reader switches 나란히 / 합쳐서). Do not mark lines by hand -->
+    {{output of code_diff.py for the full payload}}
+    <p class="src">출처: {{fixture path}}</p>
+  </details>
+
+  <h2>데이터</h2>
+  <p class="lead">{{one-line conclusion of this section}}</p>
+  <!-- Entity diagram: paste the output of scripts/erd.py here (a .split.erd-pair with one inline SVG per side, then .erd-key).
+       Do not draw the SVG by hand. A side with no stored schema gets the script's <p class="missing"> line instead of a diagram.
+       A single changed field with no relation involved needs no diagram: delete this comment and open the field table below -->
+  {{output of erd.py}}
+  <p class="src">근거: {{migration or schema file}}</p>
+  <details><summary>모델 코드 전후</summary>
+    <!-- The model as the code holds it (struct, class, ORM schema) at the base commit and now.
+         Paste the output of scripts/code_diff.py (a .dv with both views; the reader switches 나란히 / 합쳐서). Do not mark lines by hand -->
+    {{output of code_diff.py for the model code}}
+    <p class="src">출처: {{file:line of each side}}</p>
+  </details>
+  <!-- After the two folded blocks, the flows that carry the newly written values (SKILL.md step 10, item 4), one per item:
+       <ul><li>{{flow}}: {{carries the value or not}}. <code>{{file:line}}</code></li></ul> -->
+  <details><summary>필드 전체 표</summary>
+    <!-- Everything the diagram leaves out: defaults, constraints, indexes, how existing rows are handled -->
+    <table class="ft cmp">
+      <thead><tr><th>테이블과 필드</th><th>AS-IS</th><th>TO-BE</th><th>근거</th></tr></thead>
+      <tbody><tr><td><code>{{}}</code></td><td>{{}}</td><td>{{}}</td><td>{{migration}}</td></tr></tbody>
+    </table>
+  </details>
+
+  <h2>동작</h2>
+  <p class="lead">{{one-line conclusion of this section}}</p>
+  <!-- Up to four rows stay open as a plain table; a longer table goes inside <details> as below -->
+  <details><summary>입력별 전후 표 ({{n}}행)</summary>
+  <table class="ft cmp">
+    <thead><tr><th>입력과 상태</th><th>AS-IS</th><th>TO-BE</th><th>근거</th></tr></thead>
+    <tbody><tr><td>{{}}</td><td>{{}}</td><td>{{}}</td><td>{{test name}}</td></tr></tbody>
+  </table>
+  </details>
+
+  <h2>사용자 영향</h2>
+  <p class="lead">{{one-line conclusion of this section}}</p>
+  <table class="ft cmp">
+    <!-- No issue: the first header is 「사용자 행동」. No PR: the last column names the shipping unit (「작업 트리 커밋」) -->
+    <thead><tr><th>이슈 AC와 사용자 행동</th><th>AS-IS</th><th>TO-BE</th><th>맡은 PR</th></tr></thead>
+    <tbody><tr><td>{{}}</td><td>{{}}</td><td>{{}}</td><td>{{one of, in Korean: 이 PR / 이미 main(#n) / 범위 밖; with no PR: 포함 / 범위 밖}}</td></tr></tbody>
+  </table>
+  <!-- The summary's 「사용자에게 달라지는 것」 already shows these rows, so this table (with its evidence column) is always folded:
+       wrap it in <details><summary>사용자 행동별 전후 표 ({{n}}행)</summary> … </details> -->
+
+  <h2>호환성</h2>
+  <p class="lead">{{one-line conclusion of this section}}</p>
+  <table class="ft">
+    <thead><tr><th>호출처</th><th>깨질 수 있나</th><th>구 스펙 사용</th><th>breaking 조건</th><th>안전해지는 시점</th></tr></thead>
+    <tbody><tr><td>{{}}</td><td><span class="yn yes">예</span> / <span class="yn yes">순서를 어기면</span> / <span class="yn yes">새로고침 전까지</span> / <span class="yn no">아니오</span> / <span class="yn no">해당 없음</span> / <span class="yn no">확인하지 못함</span></td><td>{{}}</td><td>{{}}</td><td>{{}}</td></tr></tbody>
+  </table>
+  <!-- The warning is in the summary. Only partial rollout states here -->
+  <p class="note">부분 배포 상태: {{what happens when only one side has shipped}}</p>
+
+  <h2>변경 없는 레이어</h2>
+  <p class="note">{{layer}}: 변경 없음. {{evidence}}</p>
+
+  <!-- Only when present -->
+  <h2>의도 밖 변경</h2>
+  <p>{{}}</p>
+</main>
+
+<script>
+/* Without JavaScript, or when printed, every step stays expanded and screens show side by side.
+   1. Reading aids: wrap tables in .tw, build a TOC from the h2s and pin it on top, turn layer pills into section links.
+   2. Step rail: choosing a chip expands only that step. Left/right arrow keys, previous and next buttons, expand all.
+   3. Fragments such as #s1-p2 in the change list and the address expand that step.
+   4. Unified and split views of the code diff; side by side, swipe, onion skin, and show changes on the screen stage */
+(function () {
+  var root = document.documentElement;
+  root.classList.add('js');
+  var en = root.lang === 'en';
+  var T = en ? { prev: 'Previous', next: 'Next', toc: 'Sections' } : { prev: '이전 단계', next: '다음 단계', toc: '절' };
+  function $$(sel, el) { return Array.prototype.slice.call((el || document).querySelectorAll(sel)); }
+
+  // 1. Reading aids
+  $$('main table').forEach(function (t) {
+    if (t.closest('.tw, .dv-body, .tl')) return;
+    var w = document.createElement('div'); w.className = 'tw'; t.parentNode.insertBefore(w, t); w.appendChild(t);
+  });
+  var heads = $$('main > h2');
+  heads.forEach(function (h, i) { if (!h.id) h.id = 'h' + (i + 1); });
+  if (heads.length >= 3) {
+    var nav = document.createElement('nav'); nav.className = 'toc'; nav.setAttribute('aria-label', T.toc);
+    var links = heads.map(function (h) { var a = document.createElement('a'); a.href = '#' + h.id; a.textContent = h.textContent; nav.appendChild(a); return a; });
+    var anchor = document.querySelector('.sum') || heads[0];
+    anchor.parentNode.insertBefore(nav, anchor.nextSibling);
+    var tick = false;
+    var mark = function () {
+      tick = false;
+      var cur = -1; heads.forEach(function (h, i) { if (h.getBoundingClientRect().top <= 80) cur = i; });
+      links.forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+      if (cur >= 0) { var r = links[cur].getBoundingClientRect(), nr = nav.getBoundingClientRect();
+        if (r.left < nr.left || r.right > nr.right) nav.scrollLeft += r.left - nr.left - 16; }
+    };
+    addEventListener('scroll', function () { if (!tick) { tick = true; requestAnimationFrame(mark); } }, { passive: true });
+    mark();
+  }
+  $$('.layers li.on').forEach(function (li) {
+    var h = heads.filter(function (x) { return x.textContent.trim() === li.textContent.trim(); })[0];
+    if (!h) return;
+    var a = document.createElement('a'); a.href = '#' + h.id; a.textContent = li.textContent; li.textContent = ''; li.appendChild(a);
+  });
+
+  // 2. Step rail
+  function pick(scn, n, focus) {
+    $$('.step', scn).forEach(function (s) {
+      var on = s.getAttribute('data-step') === String(n);
+      s.classList.toggle('on', on);
+      s.setAttribute('aria-current', on ? 'step' : 'false');
+      if (on && focus) s.focus();
+    });
+    $$('.panel', scn).forEach(function (p) { p.classList.toggle('on', p.getAttribute('data-step') === String(n)); });
+    scn.setAttribute('data-on', n);
+  }
+  $$('.scn').forEach(function (scn) {
+    var count = $$('.step', scn).length;
+    $$('.step', scn).forEach(function (s) {
+      s.addEventListener('click', function (e) {
+        e.preventDefault();
+        pick(scn, s.getAttribute('data-step'));
+        if (scn.classList.contains('all')) document.getElementById(s.getAttribute('href').slice(1)).scrollIntoView({ block: 'nearest' });
+      });
+      s.addEventListener('keydown', function (e) {
+        var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!d) return;
+        e.preventDefault();
+        pick(scn, Math.min(count, Math.max(1, Number(scn.getAttribute('data-on')) + d)), true);
+      });
+    });
+    $$('.panel', scn).forEach(function (p) {
+      var n = Number(p.getAttribute('data-step'));
+      var nav = document.createElement('div'); nav.className = 'p-nav';
+      [[n - 1, T.prev], [n + 1, T.next]].forEach(function (t) {
+        if (t[0] < 1 || t[0] > count) return;
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = t[1];
+        b.addEventListener('click', function () { pick(scn, t[0]); });
+        nav.appendChild(b);
+      });
+      p.appendChild(nav);
+    });
+    var all = scn.querySelector('[data-all]');
+    if (all) all.addEventListener('click', function () {
+      var on = !scn.classList.contains('all');
+      scn.classList.toggle('all', on);
+      all.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    pick(scn, scn.getAttribute('data-default') || 1);
+  });
+
+  // 3. Change list and address fragments
+  function go(id) {
+    var m = /^(s\d+)-p(\d+)$/.exec(id);
+    if (!m) return false;
+    var scn = document.getElementById(m[1]);
+    if (!scn || !scn.querySelector('.step[data-step="' + m[2] + '"]')) return false;
+    pick(scn, m[2]);
+    return true;
+  }
+  $$('a[href^="#s"]').forEach(function (a) {
+    if (a.classList.contains('step')) return;
+    a.addEventListener('click', function () { go(a.getAttribute('href').slice(1)); });
+  });
+  if (location.hash) go(location.hash.slice(1));
+
+  // 4. Code diff view mode
+  $$('.dv').forEach(function (dv) {
+    // A diff that opens side by side (code_diff.py output) starts unified on a narrow screen, where two columns do not fit
+    var narrow = dv.getAttribute('data-narrow');
+    if (narrow && window.matchMedia('(max-width: 760px)').matches) {
+      dv.setAttribute('data-view', narrow);
+      $$('.seg button', dv).forEach(function (o) { o.setAttribute('aria-pressed', o.getAttribute('data-view') === narrow ? 'true' : 'false'); });
+    }
+    $$('.seg button', dv).forEach(function (b) {
+      b.addEventListener('click', function () {
+        dv.setAttribute('data-view', b.getAttribute('data-view'));
+        $$('.seg button', dv).forEach(function (o) { o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
+      });
+    });
+  });
+
+  // Folded blocks open for printing, so a PDF holds the evidence too
+  window.addEventListener('beforeprint', function () {
+    Array.prototype.forEach.call(document.querySelectorAll('details'), function (d) { d.open = true; });
+  });
+
+  // 4. Screen stage
+  $$('.stage').forEach(function (stage) {
+    var shots = stage.querySelector('.shots');
+    if (!shots) return;
+    var range = stage.querySelector('.slide input');
+    var cut = stage.querySelector('.cut');
+    function setPos(v) {
+      v = Math.min(100, Math.max(0, v));
+      shots.style.setProperty('--pos', v + '%');
+      shots.style.setProperty('--mix', v / 100);
+      if (cut) cut.style.setProperty('--p', v / 100);
+      if (range && Number(range.value) !== Math.round(v)) range.value = Math.round(v);
+    }
+    $$('.seg button', stage).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var mode = b.getAttribute('data-mode');
+        stage.setAttribute('data-mode', mode);
+        shots.setAttribute('data-mode', mode);
+        $$('.seg button', stage).forEach(function (o) { o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
+        setPos(50);
+      });
+    });
+    if (range) range.addEventListener('input', function () { setPos(Number(range.value)); });
+    var drag = false;
+    function at(e) { var r = shots.querySelector('.shot').getBoundingClientRect(); setPos(((e.clientX - r.left) / r.width) * 100); }
+    shots.addEventListener('pointerdown', function (e) {
+      if (shots.getAttribute('data-mode') !== 'swipe') return;
+      drag = true; shots.setPointerCapture(e.pointerId); at(e);
+    });
+    shots.addEventListener('pointermove', function (e) { if (drag) at(e); });
+    ['pointerup', 'pointercancel'].forEach(function (t) { shots.addEventListener(t, function () { drag = false; }); });
+    var marks = stage.querySelector('[data-marks]');
+    if (marks) marks.addEventListener('click', function () {
+      var off = !stage.classList.contains('nomarks');
+      stage.classList.toggle('nomarks', off);
+      marks.setAttribute('aria-pressed', off ? 'false' : 'true');
+    });
+  });
+
+  // 5. A capture opens at its full size in a dialog (a wide capture is shown at two thirds of its size, a phone shows it far smaller)
+  if (window.HTMLDialogElement) {
+    var zoom = document.createElement('dialog');
+    zoom.className = 'zoom';
+    zoom.innerHTML = '<div class="zb"><img alt=""></div>';
+    document.body.appendChild(zoom);
+    zoom.addEventListener('click', function () { zoom.close(); });
+    Array.prototype.forEach.call(document.querySelectorAll('.shot img'), function (img) {
+      img.addEventListener('click', function () {
+        var shots = img.closest('.shots');
+        if (shots && shots.getAttribute('data-mode') === 'swipe') return;   // dragging the swipe bar is not a click to zoom
+        var big = zoom.querySelector('img');
+        big.src = img.src; big.alt = img.alt;
+        zoom.showModal();
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

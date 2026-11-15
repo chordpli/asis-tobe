@@ -2,12 +2,14 @@
 //
 //   NODE_PATH=<node_modules containing puppeteer-core> node render_check.mjs <doc.html> <out-dir> [--width 1280]
 //
-// Produces: <out-dir>/render.full.png (full page, with all details and all six scenario cells expanded),
-//           <out-dir>/render.first.<width>.png and render.first.420.png (the first screen with nothing opened),
+// Produces: <out-dir>/render.first.<width>.png and render.first.420.png (the first screen with nothing opened),
 //           <out-dir>/render.pair<N>.png (one per screen stage .stage, side-by-side mode; also catches .pair from the old template),
-//           <out-dir>/render.<dusk|bloom>.<width>.full.png (both color schemes at 1280px, default Dusk at 420px width)
+//           <out-dir>/render.<dusk|bloom>.<width>.<NN>.png (the whole page with all details and all six scenario cells expanded,
+//             cut into slices 2,000px tall, top to bottom: both color schemes at 1280px, default Dusk at 420px width).
+//             One image of the whole page is not written: past 16,384 device pixels Chrome repeats the top of the page.
 // Prints one JSON line: pairs (stages found), foldedHeight (page height at the given width before anything is opened),
-//   outside (stages whose boxes or numbers leave the image), overflowX (variants that scroll sideways), consoleErrors, variants, out.
+//   outside (stages whose boxes or numbers leave the image), overflowX (variants that scroll sideways), consoleErrors,
+//   slices (how many slices each variant has), out.
 // e.g. NODE_PATH=<app repo>/node_modules. The script may live outside it (createRequire).
 import { createRequire } from 'node:module';
 import { existsSync, mkdirSync } from 'node:fs';
@@ -53,6 +55,18 @@ try {
     document.querySelectorAll('details').forEach((d) => { d.open = true; });
     document.querySelectorAll('.scn').forEach((s) => s.classList.add('all'));
   });
+  // The whole page as slices. A single full-page image wraps around at Chrome's texture limit, so each slice is its own capture
+  const SLICE = 2000;
+  const sliced = async (base, w) => {
+    await page.evaluate(() => scrollTo(0, 0));
+    const h = await page.evaluate(() => document.documentElement.scrollHeight);
+    const n = Math.ceil(h / SLICE);
+    for (let i = 0; i < n; i++) {
+      const clip = { x: 0, y: i * SLICE, width: w, height: Math.min(SLICE, h - i * SLICE) };
+      await page.screenshot({ path: `${base}.${String(i + 1).padStart(2, '0')}.png`, clip, captureBeyondViewport: true });
+    }
+    return n;
+  };
   await page.setViewport({ width, height: 1000, deviceScaleFactor: 2 });
   await page.goto(pathToFileURL(resolve(doc)).href, { waitUntil: 'load' });
   // What the reader scrolls before opening anything: the page height with every <details> closed and one scenario cell open
@@ -63,7 +77,6 @@ try {
   await page.screenshot({ path: `${outDir}/render.first.420.png` });
   await page.setViewport({ width, height: 1000, deviceScaleFactor: 2 });
   await openAll();
-  await page.screenshot({ path: `${outDir}/render.full.png`, fullPage: true });
   const pairs = await page.$$('.stage, .pair');
   // The sticky table of contents would sit on top of each stage's title in these crops, so it is taken out of the way for them only
   const unstick = await page.addStyleTag({ content: 'nav.toc { position: static !important; }' });
@@ -84,17 +97,18 @@ try {
   // Looking at the layout in only one form misses things. Capture one more each for both color schemes and the narrow width. dusk is the default, with no data-theme
   const variants = [['dusk', width], ['bloom', width], ['dusk', 420]];
   const overflowX = [];
+  const slices = {};
   for (const [scheme, w] of variants) {
     // The theme is set by data-theme on html, not by the system setting
     await page.evaluate((t) => { if (t === 'dusk') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t; }, scheme);
     await page.setViewport({ width: w, height: 1000, deviceScaleFactor: 2 });
     await openAll();
-    await page.screenshot({ path: `${outDir}/render.${scheme}.${w}.full.png`, fullPage: true });
+    slices[`${scheme}.${w}`] = await sliced(`${outDir}/render.${scheme}.${w}`, w);
     // If the page scrolls horizontally at the narrow width, a table or long identifier has leaked out
     const sw = await page.evaluate(() => document.documentElement.scrollWidth);
     if (sw > w) overflowX.push(`${scheme}.${w}:${sw}`);
   }
-  console.log(JSON.stringify({ pairs: pairs.length, foldedHeight, outside, overflowX, consoleErrors, variants: variants.map(([s, w]) => `${s}.${w}`), out: resolve(outDir) }));
+  console.log(JSON.stringify({ pairs: pairs.length, foldedHeight, outside, overflowX, consoleErrors, slices, out: resolve(outDir) }));
 } finally {
   await browser.close();
 }

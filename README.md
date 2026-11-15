@@ -22,7 +22,7 @@ Or clone it yourself:
 git clone https://github.com/chordpli/asis-tobe.git ~/.claude/skills/asis-tobe
 ```
 
-Install it at user level (`-g`), in a folder named `asis-tobe`. The skill looks for its scripts in `~/.claude/skills/asis-tobe/scripts/`, so a project-level install does not find them. To update, run `npx skills update asis-tobe -g`, or `git pull` in a cloned folder.
+`-g` installs it at user level, for every project. Leave it out to install into the current project only. To update, run `npx skills update asis-tobe -g`, or `git pull` in a cloned folder.
 
 Then ask Claude Code in plain words.
 

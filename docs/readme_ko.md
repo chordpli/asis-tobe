@@ -22,7 +22,7 @@ npx skills add chordpli/asis-tobe -g -a claude-code
 git clone https://github.com/chordpli/asis-tobe.git ~/.claude/skills/asis-tobe
 ```
 
-사용자 단위(`-g`)로, `asis-tobe` 라는 폴더에 설치해야 해요. 스킬이 자기 스크립트를 `~/.claude/skills/asis-tobe/scripts/` 에서 찾기 때문에 프로젝트 단위로 설치하면 찾지 못해요. 갱신은 `npx skills update asis-tobe -g` 이고, clone 한 폴더라면 `git pull` 이에요.
+`-g` 는 사용자 단위 설치라 모든 프로젝트에서 쓸 수 있어요. 빼면 지금 프로젝트에만 설치돼요. 갱신은 `npx skills update asis-tobe -g` 이고, clone 한 폴더라면 `git pull` 이에요.
 
 설치한 뒤 Claude Code 에서 평소 말로 부탁하면 돼요.
 

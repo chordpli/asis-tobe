@@ -8,6 +8,8 @@ user-invocable: true
 
 Find the layers a change touches, put AS-IS and TO-BE side by side for each, and link the layers with evidence-backed arrows: "this field is dropped, so this response changes, so this disappears from (or appears on) this screen." If code changes but what the user sees stays the same, saying so is the conclusion. Do not invent changes.
 
+`<skill>` in the commands below is this skill's base directory: the folder that holds this `SKILL.md` (`~/.claude/skills/asis-tobe` for a user-level install, `<project>/.claude/skills/asis-tobe` for a project-level one). Replace it with the real path before running a command.
+
 ## Principles
 
 1. **Side by side.** AS-IS left, TO-BE right. Never stacked vertically.
@@ -77,8 +79,8 @@ If only the place that computes a value moves (e.g. the server's `ERROR` is now 
 ### 4. Collect real artifacts per layer
 
 - **Data**: three parts, in this order.
-  1. **Entity diagram**, open. Only the changed entities and the ones directly attached, 6 or fewer per side. Write them as JSON and let the script draw both sides as inline SVG: `python3 -I ~/.claude/skills/asis-tobe/scripts/erd.py <spec.json>` (the spec format is in the script's header). Never draw the SVG by hand and never load a diagram library; the page is self-contained. The script marks added, removed, and changed fields and entities itself by comparing the two sides, so write each side as it really is at that commit.
-  2. **Model code**, folded (`<details>`): the model as the code holds it (struct, class, ORM schema) at the base and now. One line diff per model from `python3 -I ~/.claude/skills/asis-tobe/scripts/code_diff.py <ASIS.txt> <TOBE.txt> --label "<name (path)>" --start-a <line> --start-b <line>`; a new or removed model uses `/dev/null` for the missing side. The script computes the changed lines and prints both views (나란히 side by side, 합쳐서 unified) for the reader to switch; never mark lines by hand.
+  1. **Entity diagram**, open. Only the changed entities and the ones directly attached, 6 or fewer per side. Write them as JSON and let the script draw both sides as inline SVG: `python3 -I <skill>/scripts/erd.py <spec.json>` (the spec format is in the script's header). Never draw the SVG by hand and never load a diagram library; the page is self-contained. The script marks added, removed, and changed fields and entities itself by comparing the two sides, so write each side as it really is at that commit.
+  2. **Model code**, folded (`<details>`): the model as the code holds it (struct, class, ORM schema) at the base and now. One line diff per model from `python3 -I <skill>/scripts/code_diff.py <ASIS.txt> <TOBE.txt> --label "<name (path)>" --start-a <line> --start-b <line>`; a new or removed model uses `/dev/null` for the missing side. The script computes the changed lines and prints both views (나란히 side by side, 합쳐서 unified) for the reader to switch; never mark lines by hand.
   3. **Field table**, folded: what the diagram leaves out (defaults, constraints, indexes, handling of existing rows).
   A single changed field with no relation involved needs no diagram: one row in the field table, shown open. If AS-IS had no stored schema (in memory, a file), give only `tobe` to the script with `asis_note` saying where the data lived (`file:line`); the model code is then the AS-IS evidence, so leave that `<details>` open. The migration that creates the first tables is TO-BE. If this cleans up after an already-shipped migration, 「이미 반영(<PR>)」 ("already applied (<PR>)") is the first link of the impact path.
 - **API spec**: the payload before and after as a line diff from `scripts/code_diff.py` (same script as the model code; one call per payload, `--context 3` for long ones, `--mask id,time` for recorded calls). Below it, `필드 | AS-IS | TO-BE | 시맨틱 변경` (field | AS-IS | TO-BE | semantic change). A name- or type-only change merges both cells into one line: `<code class="old">start_time</code> → <code class="new">starts_at</code>`. Call sites:
@@ -165,12 +167,12 @@ Then number the merge and rollout order: per PR 「즉시 머지 가능」 ("rea
 
 ### 7. Mark the changed spots on screens
 
-**Read [references/screens.md](references/screens.md) ("Stage layout", "Boxes") before this step.** Every screenshot pair gets boxes on the changed spots; never leave just the picture. Coordinates: `python3 -I ~/.claude/skills/asis-tobe/scripts/diff_boxes.py <ASIS.png> <TOBE.png>` (same scenario, same viewport width). One side only or no capture: `.stage.solo` or `<p class="missing">`, no script.
+**Read [references/screens.md](references/screens.md) ("Stage layout", "Boxes") before this step.** Every screenshot pair gets boxes on the changed spots; never leave just the picture. Coordinates: `python3 -I <skill>/scripts/diff_boxes.py <ASIS.png> <TOBE.png>` (same scenario, same viewport width). One side only or no capture: `.stage.solo` or `<p class="missing">`, no script.
 
 Gate, run for every document, with or without screen pairs:
 
 ```
-NODE_PATH=<node_modules containing puppeteer-core> node ~/.claude/skills/asis-tobe/scripts/render_check.mjs <doc.html> <out-dir>
+NODE_PATH=<node_modules containing puppeteer-core> node <skill>/scripts/render_check.mjs <doc.html> <out-dir>
 ```
 
 `NODE_PATH` is a `node_modules` that contains `puppeteer-core` (the script drives the system Chrome); the project's adapter note names it ([references/adapters.md](references/adapters.md)). The output also reports `foldedHeight`, the page height at 1280px before anything is opened: past about 3,000px times the number of scenarios plus one (the summary and the layer sections count as one more), fold more or drop a stage that repeats another. If everything still open is something a rule keeps open, leave it and say so in the report. Finish only when `outside` (boxes or their numbers outside the image in that `.shot`), `overflowX` (horizontal scroll at that width), and `consoleErrors` (script error or broken image path) are all empty arrays. Then open `render.pair<N>.png`: if a box border touches text, widen it; if a number covers text, hang it outside with `out` ([references/screens.md](references/screens.md)).
@@ -180,14 +182,14 @@ NODE_PATH=<node_modules containing puppeteer-core> node ~/.claude/skills/asis-to
 - Output language follows the request; unspecified means a single Korean document. Two or more languages: one file each (`asis-tobe.ko.html`, `asis-tobe.en.html`).
 - Capture screenshots in that edition's locale; no en screens in the ko edition. On-screen text quoted in callouts is that language's actual screen text.
 - Follow that language's editing procedure in [references/terms.md](references/terms.md). The English edition is rewritten as English technical writing, not translated.
-- Gate per edition: `python3 -I ~/.claude/skills/asis-tobe/scripts/text_lint.py <doc.html>`; fix modifiers, long sentences, long parentheticals, overused emphasis, mixed terms for one concept (`term-mix`), translationese (`transl`, ko only), and Hangul left in the English edition. Criteria: 「줄바꿈과 꾸밈말」 ("Line breaks and modifiers") in [references/terms.md](references/terms.md). `cell` and `dense` findings map to rules in [references/document.md](references/document.md).
+- Gate per edition: `python3 -I <skill>/scripts/text_lint.py <doc.html>`; fix modifiers, long sentences, long parentheticals, overused emphasis, mixed terms for one concept (`term-mix`), translationese (`transl`, ko only), and Hangul left in the English edition. Criteria: 「줄바꿈과 꾸밈말」 ("Line breaks and modifiers") in [references/terms.md](references/terms.md). `cell` and `dense` findings map to rules in [references/document.md](references/document.md).
 - Cross-check editions: number of summary items, order steps, table rows, box numbers.
 
 ### 9. Produce the document
 
 - **Read [references/document.md](references/document.md) before filling [references/template.html](references/template.html).** Replace every `{{…}}` placeholder; keep Korean fixed labels in a Korean edition and swap them for en strings in an English one.
 - Save location: the project's documentation rules or its adapter note if any (e.g. `docs/<repo>/<YYYYMMDD>_<slug>/asis-tobe.html` plus an index update). Otherwise `~/Downloads/asis-tobe-<slug>.html`. Report the absolute path.
-- **One file.** The document is shared as a single HTML file, so its screenshots live inside it. Write `<img>` with the capture's file path while you work, then run `python3 -I ~/.claude/skills/asis-tobe/scripts/inline_images.py <doc.html>` once the screenshots are final and before the gates of steps 7 and 8; it turns every local image into a data URI and reports the size. Keep the PNG files only in your working folder (the markdown edition needs them); do not leave an image folder next to the document.
+- **One file.** The document is shared as a single HTML file, so its screenshots live inside it. Write `<img>` with the capture's file path while you work, then run `python3 -I <skill>/scripts/inline_images.py <doc.html>` once the screenshots are final and before the gates of steps 7 and 8; it turns every local image into a data URI and reports the size. Keep the PNG files only in your working folder (the markdown edition needs them); do not leave an image folder next to the document.
 - On request, a markdown edition for the PR body (see document.md).
 
 ### 10. Verify the facts before reporting

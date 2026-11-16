@@ -1,10 +1,25 @@
 {
   "name": "asis-tobe",
+  "displayName": "AS-IS / TO-BE",
   "description": "Explains one change (a PR, branch, working tree, PR bundle, or issue) as a single HTML page: AS-IS and TO-BE side by side for data, API contract, behavior, screen, and user impact, with the impact chain, a compatibility verdict, rollback, and the merge and rollout order.",
   "version": "1.0.0",
-  "author": { "name": "chordpli", "url": "https://github.com/chordpli" },
+  "author": {
+    "name": "chordpli",
+    "url": "https://github.com/chordpli"
+  },
   "homepage": "https://github.com/chordpli/asis-tobe",
   "repository": "https://github.com/chordpli/asis-tobe",
+  "documentationUrl": "https://github.com/chordpli/asis-tobe#readme",
+  "supportUrl": "https://github.com/chordpli/asis-tobe/issues",
   "license": "MIT",
-  "keywords": ["as-is", "to-be", "before-after", "pull-request", "code-review", "compatibility", "rollout", "erd"]
+  "keywords": [
+    "as-is",
+    "to-be",
+    "before-after",
+    "pull-request",
+    "code-review",
+    "compatibility",
+    "rollout",
+    "erd"
+  ]
 }

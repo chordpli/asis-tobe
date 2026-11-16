@@ -59,17 +59,16 @@ repos: <repo-a>, <repo-b>
 Run from the app folder (the one with `eas.json`):
 
 ```
-npx -y eas-cli build:list --platform ios --status finished --limit 10 --json --non-interactive | jq -r '.[] | select(.buildProfile=="production") | .appVersion + " " + .gitCommitHash'
+eas build:list --platform ios --status finished --limit 10 --json --non-interactive | jq -r '.[] | select(.buildProfile=="production") | .appVersion + " " + .gitCommitHash'
 ```
 
 - Keep only the store profile. Debug or preview profiles are not store builds.
 - A finished build is not necessarily in the store, so match which build passed review against the issue or release notes.
-- Call it by the package name `eas-cli` (`npx eas` is a different package).
+- `eas` is the command of the `eas-cli` package, installed in the project or globally. If it is not installed, say so and move on to the fallback below; do not download it on the fly.
 - It requires an EAS login. If it fails, move on to the issue or release notes (lightweight fallback), then to a 「추정:」 lower bound.
-- The first run takes 1–2 minutes to download eas-cli.
 - The `--json` output includes long log URLs and runs to tens of thousands of characters, so always filter with `jq`.
 - macOS has no `timeout`, so do not use it.
-- OTA updates are the commits from `npx -y eas-cli update:list --branch <production branch> --json --non-interactive`.
+- OTA updates are the commits from `eas update:list --branch <production branch> --json --non-interactive`.
 
 Other mobile pipelines (fastlane, Xcode Cloud, Play Console): the store build's commit is in the pipeline's build list or the release tag; the same rules about confirmed and 「추정:」 apply.
 

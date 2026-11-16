@@ -59,7 +59,8 @@ repos: <repo-a>, <repo-b>
 Run from the app folder (the one with `eas.json`):
 
 ```
-eas build:list --platform ios --status finished --limit 10 --json --non-interactive | jq -r '.[] | select(.buildProfile=="production") | .appVersion + " " + .gitCommitHash'
+eas build:list --platform ios --status finished --limit 10 --json --non-interactive > builds.json
+jq -r '.[] | select(.buildProfile=="production") | .appVersion + " " + .gitCommitHash' builds.json
 ```
 
 - Keep only the store profile. Debug or preview profiles are not store builds.
@@ -76,7 +77,7 @@ Other mobile pipelines (fastlane, Xcode Cloud, Play Console): the store build's 
 
 No deploy workflow on push to main, and a deploy command in a Makefile or README, means the web is deployed by hand. Then main is not the released web.
 
-- The deploy time is the `last-modified` header of the served bundle (`curl -sI` on the bundle URL taken from the page source).
+- The deploy time is the `last-modified` header of the served bundle (an HTTP HEAD request to the bundle URL taken from the page source).
 - Compare it with the server's production deploy time to say whether the web was live before the server.
 - Look for a commit sha in the bundle (an error-reporting release id, a version file). If there is none, write 「배포된 웹의 커밋: 확인하지 못함」 and give the `last-modified` time.
 

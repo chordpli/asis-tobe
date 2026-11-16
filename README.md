@@ -192,6 +192,15 @@ examples/
 - The document is long. Folded, it can pass 10,000px at 1280px width. It is built so that you decide on the first screen and open only what you need.
 - Consumers outside the repo cannot be seen. They are written as “Not verified”.
 
+## Privacy
+
+The skill runs on your machine. It has no server, collects nothing, and sends nothing anywhere.
+
+- It reads the repositories you point it at and, through your own `gh` login, the pull requests and issues you name.
+- It writes one HTML document and its working files to your disk.
+- Its scripts make no network calls. `render_check.mjs` opens the local document in your own Chrome.
+- Building and running your project to capture screens happens locally, with the commands your project already uses.
+
 ## License
 
 [MIT](LICENSE)

@@ -2,6 +2,8 @@
 
 [English](../README.md) | **한국어**
 
+[![skills.sh](https://skills.sh/b/chordpli/asis-tobe)](https://skills.sh/chordpli/asis-tobe)
+
 변경 하나가 데이터, API, 서버 동작, 화면, 사용자에게 각각 무엇을 바꾸는지 **한 장의 HTML** 로 보여 주는 Claude Code 스킬이에요. PR, 브랜치, 커밋 전 작업 트리, 여러 리포에 걸친 PR 묶음, 이슈 중 무엇을 줘도 AS-IS 와 TO-BE 를 나란히 놓고, 레이어 사이의 인과와 배포 순서까지 적어요.
 
 리뷰어, QA, 기획자가 코드를 열기 전에 읽는 문서를 만드는 것이 목적이에요. 첫 화면만 읽어도 머지해도 되는지, 무엇이 깨지는지, 되돌릴 수 있는지 판단할 수 있어야 해요.
@@ -14,6 +16,12 @@
 
 ```bash
 npx skills add chordpli/asis-tobe -g -a claude-code
+```
+
+Claude Code 플러그인으로도 설치할 수 있어요(2.1.275 이상).
+
+```text
+/plugin install asis-tobe --marketplace chordpli/asis-tobe
 ```
 
 직접 clone 해도 돼요.

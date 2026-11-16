@@ -2,6 +2,8 @@
 
 **English** | [한국어](docs/readme_ko.md)
 
+[![skills.sh](https://skills.sh/b/chordpli/asis-tobe)](https://skills.sh/chordpli/asis-tobe)
+
 A Claude Code skill that shows, on **one HTML page**, what a single change does to the data, the API, the server behavior, the screen, and the user. Give it a PR, a branch, an uncommitted working tree, a bundle of PRs across several repos, or an issue. It puts AS-IS and TO-BE side by side, links the layers by cause and effect, and writes down the rollout order.
 
 The page is for reviewers, QA, and planners to read before they open the code. The first screen alone should tell them whether the change is safe to merge, what breaks, and whether it can be rolled back.
@@ -14,6 +16,12 @@ Full example documents: [English](examples/example-todo.en.html), [한국어](ex
 
 ```bash
 npx skills add chordpli/asis-tobe -g -a claude-code
+```
+
+As a Claude Code plugin (2.1.275 or later):
+
+```text
+/plugin install asis-tobe --marketplace chordpli/asis-tobe
 ```
 
 Or clone it yourself:

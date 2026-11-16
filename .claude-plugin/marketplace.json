@@ -1,0 +1,15 @@
+{
+  "name": "chordpli",
+  "description": "Skills by chordpli. asis-tobe: before and after of one change on a single HTML page.",
+  "owner": {
+    "name": "chordpli",
+    "url": "https://github.com/chordpli"
+  },
+  "plugins": [
+    {
+      "name": "asis-tobe",
+      "source": "./",
+      "description": "One HTML page comparing AS-IS and TO-BE per layer for a change, with the impact chain, compatibility verdict, rollback, and rollout order."
+    }
+  ]
+}

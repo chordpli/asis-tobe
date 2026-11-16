@@ -1,6 +1,5 @@
 {
   "name": "asis-tobe",
-  "displayName": "AS-IS / TO-BE",
   "description": "Explains one change (a PR, branch, working tree, PR bundle, or issue) as a single HTML page: AS-IS and TO-BE side by side for data, API contract, behavior, screen, and user impact, with the impact chain, a compatibility verdict, rollback, and the merge and rollout order.",
   "version": "1.0.0",
   "author": {

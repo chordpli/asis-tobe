@@ -188,7 +188,7 @@ examples/
 
 ## Good to know
 
-- One run takes a little over 20 minutes. It builds both versions, runs them, measures, and measures again at the end.
+- One run takes 10 to a little over 20 minutes, depending on the size of the change. It builds both versions, runs them, measures, and measures again at the end.
 - The document is long. Folded, it can pass 10,000px at 1280px width. It is built so that you decide on the first screen and open only what you need.
 - Consumers outside the repo cannot be seen. They are written as “Not verified”.
 
